@@ -10,16 +10,17 @@ Stack: **Laravel 12 · Filament 3 · Tailwind CSS 3 · Vite · MySQL**
 - Page d'accueil avec produits en vedette, nouveautés, promotions
 - Catalogue produits avec filtres (catégorie, prix, promotion)
 - Page produit détaillée avec galerie, variantes, avis
-- Panier d'achat (persistant, avec session pour invités)
-- Checkout complet (livraison, paiement, récapitulatif)
+- Panier d'achat (persistant, avec session pour invités + fusion à la connexion)
+- Checkout complet (livraison, paiement à la livraison, récapitulatif)
 - Codes promo / coupons
-- Compte client (commandes, favoris, profil)
-- Livraison gratuite dès 500 MAD
+- Compte client (commandes, favoris, profil, notifications)
+- Livraison gratuite dès le seuil configuré dans les Settings
+- Mot de passe oublié / réinitialisation par email
 
 ### 🔐 Authentification
-- Inscription / Connexion
+- Inscription / Connexion avec rate limiting anti-bruteforce
+- Mot de passe oublié (email de réinitialisation)
 - Gestion de profil
-- Changement de mot de passe
 
 ### 🎛️ Administration Filament
 - Dashboard avec statistiques (CA, commandes, stock)
@@ -29,11 +30,15 @@ Stack: **Laravel 12 · Filament 3 · Tailwind CSS 3 · Vite · MySQL**
 - Gestion commandes (statuts, suivi)
 - Gestion utilisateurs
 - Gestion coupons / codes promo
+- Alertes automatiques stock bas
 
-### 🗃️ Base de données
-- Users, Categories, Brands, Products, ProductImages, ProductVariants
-- Carts, CartItems, Orders, OrderItems
-- Reviews, Wishlists, Addresses, Coupons, Settings
+### 📧 Email (via Resend — GRATUIT jusqu'à 3 000 emails/mois)
+- Confirmation de commande client
+- Notification nouvelle commande aux admins
+- Changement de statut de commande
+- Email de bienvenue à l'inscription
+- Réinitialisation de mot de passe
+- Alerte stock bas aux admins
 
 ---
 
@@ -44,11 +49,12 @@ Stack: **Laravel 12 · Filament 3 · Tailwind CSS 3 · Vite · MySQL**
 - MySQL 8+
 - Composer
 - Node.js >= 18 + npm
+- Compte Resend gratuit sur resend.com
 
 ### Étapes
 
 ```bash
-# 1. Cloner / décompresser le projet
+# 1. Décompresser le projet
 cd ecommerce
 
 # 2. Installer les dépendances PHP
@@ -61,10 +67,10 @@ npm install
 cp .env.example .env
 php artisan key:generate
 
-# 5. Configurer la base de données dans .env
-# DB_DATABASE=ecommerce_db
-# DB_USERNAME=root
-# DB_PASSWORD=votre_mot_de_passe
+# 5. Configurer dans .env :
+#    - DB_DATABASE, DB_USERNAME, DB_PASSWORD
+#    - MAIL_PASSWORD= votre clé API Resend (re_xxxx...)
+#    - MAIL_FROM_ADDRESS= votre email expéditeur
 
 # 6. Créer la base de données MySQL
 mysql -u root -p -e "CREATE DATABASE ecommerce_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -78,7 +84,10 @@ php artisan storage:link
 # 9. Compiler les assets
 npm run build
 
-# 10. Démarrer le serveur
+# 10. Démarrer le worker de queue (emails en arrière-plan)
+php artisan queue:work --daemon &
+
+# 11. Démarrer le serveur
 php artisan serve
 ```
 
@@ -91,44 +100,43 @@ php artisan serve
 ### Comptes de test
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
-| Admin | admin@ecommerce.ma | password |
-| Client | client@example.com | password |
+| Admin | admin@ecommerce.ci | password |
+| Client | client@ecommerce.ci | password |
 
 ### Codes promo de test
 | Code | Réduction |
 |------|-----------|
 | BIENVENUE10 | 10% |
-| SOLDES20 | 20% (min. 500 MAD) |
+| SOLDES20 | 20% (min. 500 XOF) |
 | LIVRAISON | Livraison gratuite |
 
 ---
 
-## 📁 Structure du projet
+## 📧 Configuration email (Resend — gratuit)
 
+1. Créer un compte sur [resend.com](https://resend.com) (gratuit, pas de CB)
+2. Ajouter et vérifier votre domaine
+3. Générer une clé API
+4. Dans `.env` :
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.resend.com
+MAIL_PORT=465
+MAIL_USERNAME=resend
+MAIL_PASSWORD=re_xxxxxxxxxxxx   # votre clé API
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="commandes@votredomaine.com"
 ```
-app/
-├── Filament/Admin/
-│   ├── Resources/          # ProductResource, CategoryResource, OrderResource...
-│   └── Widgets/            # StatsOverview, RevenueChart, LatestOrders
-├── Http/Controllers/
-│   ├── Auth/               # Login, Register
-│   └── Shop/               # Home, Product, Cart, Checkout, Account
-├── Models/                 # Product, Order, Cart, User...
-├── Providers/Filament/     # AdminPanelProvider
-└── Services/               # CartService, OrderService
-database/
-├── migrations/             # Toutes les tables
-└── seeders/                # Données de démonstration
-resources/
-├── css/app.css             # Tailwind CSS
-├── js/app.js               # JavaScript
-└── views/
-    ├── layouts/app.blade.php
-    ├── shop/               # Pages boutique
-    ├── auth/               # Login / Register
-    └── components/         # Composants réutilisables
-routes/web.php              # Toutes les routes
-```
+
+---
+
+## 💳 Mode de paiement
+
+Actuellement : **paiement à la livraison uniquement** (adapté au marché ivoirien).
+
+Pour ajouter le Mobile Money (Wave CI, Orange Money, MTN CI) ultérieurement :
+- [CinetPay](https://cinetpay.com) — leader en Côte d'Ivoire (~1.5% de commission)
+- [Paydunya](https://paydunya.com) — alternative avec API Laravel simple
 
 ---
 
@@ -138,7 +146,7 @@ routes/web.php              # Toutes les routes
 # Assets en temps réel
 npm run dev
 
-# Queue worker (si emails)
+# Queue worker (emails)
 php artisan queue:work
 
 # Vider les caches
@@ -168,6 +176,7 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan migrate --force
+php artisan queue:work --daemon
 ```
 
 ---

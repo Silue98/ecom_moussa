@@ -25,9 +25,8 @@ class CheckoutController extends Controller
             return redirect()->route('cart')->with('info', 'Votre panier est vide.');
         }
 
-        // Utilisateur connecté ou invité
-        $user    = Auth::user();
-        $address = $user?->addresses()->where('is_default', true)->first();
+        $user       = Auth::user();
+        $address    = $user?->addresses()->where('is_default', true)->first();
         $couponCode = session('coupon_code');
 
         return view('shop.checkout', compact('cart', 'user', 'address', 'couponCode'));
@@ -49,9 +48,11 @@ class CheckoutController extends Controller
 
             session()->forget('coupon_code');
 
-            return redirect()
-                ->route('checkout.success', $order)
-                ->with('success', '🎉 Commande #' . $order->order_number . ' passée avec succès !');
+            // Stocker le numéro de commande en session flash pour la page succès
+            session()->flash('order_confirmed_id', $order->id);
+            session()->flash('order_confirmed_number', $order->order_number);
+
+            return redirect()->route('checkout.success', $order);
 
         } catch (\Exception $e) {
             return back()
@@ -62,18 +63,27 @@ class CheckoutController extends Controller
 
     public function success(Order $order)
     {
-        // Accessible par l'utilisateur connecté OU si la commande est en session (invité)
-        $guestOrderId = session('guest_order_id');
+        // Vérification souple : utilisateur connecté et propriétaire
+        // OU commande confirmée en session (flash)
+        $confirmedId = session('order_confirmed_id');
 
         if (Auth::check()) {
+            // Utilisateur connecté : doit être le propriétaire
             if ($order->user_id !== Auth::id()) {
                 abort(403);
             }
-        } elseif ($guestOrderId !== $order->id) {
-            abort(403);
+        } else {
+            // Invité : vérifier via session flash
+            if ((int) $confirmedId !== (int) $order->id) {
+                // Aussi vérifier guest_order_id (mis par OrderService)
+                $guestOrderId = session('guest_order_id');
+                if ((int) $guestOrderId !== (int) $order->id) {
+                    abort(403);
+                }
+            }
         }
 
-        $order->load('items');
+        $order->load('items.product.mainImage');
 
         return view('shop.checkout-success', compact('order'));
     }

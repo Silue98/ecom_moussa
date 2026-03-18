@@ -152,6 +152,36 @@
                 </form>
                 @endauth
 
+                {{-- ── Encarts boutique & crédit ── --}}
+                @php
+                    $showPickup = setting('pickup_enabled', '0') === '1';
+                    $showCredit = setting('credit_enabled', '0') === '1';
+                @endphp
+
+                @if($showPickup)
+                <a href="{{ route('boutique.info') }}"
+                   class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 hover:bg-emerald-100 transition">
+                    <span class="text-xl">🏪</span>
+                    <div>
+                        <p class="text-sm font-semibold text-emerald-800">Retrait en boutique disponible</p>
+                        <p class="text-xs text-emerald-600">Gratuit · Voir l'adresse et les horaires</p>
+                    </div>
+                    <span class="ml-auto text-emerald-500 text-sm">→</span>
+                </a>
+                @endif
+
+                @if($showCredit)
+                <a href="{{ route('credit.info') }}"
+                   class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 hover:bg-amber-100 transition">
+                    <span class="text-xl">💳</span>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-800">Achat à crédit disponible</p>
+                        <p class="text-xs text-amber-600">Repartez aujourd'hui · Payez en plusieurs fois</p>
+                    </div>
+                    <span class="ml-auto text-amber-500 text-sm">→</span>
+                </a>
+                @endif
+
                 {{-- Infos --}}
                 <div class="border-t mt-4 pt-4 space-y-2 text-sm text-gray-600">
                     @if($product->sku)<div>SKU : <span class="font-medium">{{ $product->sku }}</span></div>@endif

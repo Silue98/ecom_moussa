@@ -47,11 +47,11 @@
             <span class="text-xs text-gray-500 ml-1">({{ $product->reviews()->count() }})</span>
         </div>
 
-        <div class="flex items-center justify-between mt-3">
-            <div>
-                <span class="text-lg font-bold text-gray-900">{{ number_format($product->price, 2) }} FCFA</span>
+        <div class="flex items-center justify-between mt-3 gap-1">
+            <div class="min-w-0">
+                <span class="text-sm sm:text-base font-bold text-gray-900">{{ number_format($product->price, 0, ',', ' ') }} XOF</span>
                 @if($product->compare_price)
-                    <span class="text-sm text-gray-400 line-through ml-1">{{ number_format($product->compare_price, 2) }}</span>
+                    <span class="text-xs text-gray-400 line-through block sm:inline sm:ml-1">{{ number_format($product->compare_price, 0, ',', ' ') }}</span>
                 @endif
             </div>
 

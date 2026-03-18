@@ -33,8 +33,12 @@ class SettingResource extends Resource
                         'general'  => 'Général',
                         'shop'     => 'Boutique',
                         'mail'     => 'Email',
-                        'social'   => 'Réseaux sociaux',
+                        'social'     => 'Réseaux sociaux',
+                        'boutique' => 'Boutique physique',
+                        'credit'   => 'Crédit',
                         'seo'      => 'SEO',
+                        'whatsapp' => 'WhatsApp',
+                        'geo'      => 'Géolocalisation',
                     ])
                     ->default('general')
                     ->required(),
@@ -89,8 +93,12 @@ class SettingResource extends Resource
                         'general' => 'Général',
                         'shop'    => 'Boutique',
                         'mail'    => 'Email',
-                        'social'  => 'Réseaux sociaux',
-                        'seo'     => 'SEO',
+                        'social'     => 'Réseaux sociaux',
+                        'boutique' => 'Boutique physique',
+                        'credit'   => 'Crédit',
+                        'seo'      => 'SEO',
+                        'whatsapp' => 'WhatsApp',
+                        'geo'      => 'Géolocalisation',
                     ]),
             ])
             ->actions([

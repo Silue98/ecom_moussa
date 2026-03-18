@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         // Admin user
         User::create([
             'name' => 'Administrateur',
-            'email' => 'admin@ecommerce.ma',
+            'email' => 'admin@ecommerce.ci',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'is_active' => true,
@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         // Test customer
         User::create([
             'name' => 'Client Test',
-            'email' => 'client@example.com',
+            'email' => 'client@ecommerce.ci',
             'password' => Hash::make('password'),
             'role' => 'customer',
             'is_active' => true,
@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
         // Settings
         $settings = [
             ['key' => 'site_name', 'value' => 'E-Commerce Laravel', 'group' => 'general'],
-            ['key' => 'site_email', 'value' => 'contact@ecommerce.ma', 'group' => 'general'],
+            ['key' => 'site_email', 'value' => 'contact@ecommerce.ci', 'group' => 'general'],
             ['key' => 'currency', 'value' => 'XOF', 'group' => 'shop'],
             ['key' => 'free_shipping_threshold', 'value' => '30000', 'group' => 'shop'],
             ['key' => 'shipping_price', 'value' => '30', 'group' => 'shop'],
@@ -117,8 +117,24 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        // Settings boutique
+        $boutiqueSettings = [
+            ['key' => 'shop_name',        'value' => 'Phone Store CI',            'group' => 'boutique'],
+            ['key' => 'shop_address',     'value' => 'Votre adresse, Abidjan',    'group' => 'boutique'],
+            ['key' => 'shop_city',        'value' => "Abidjan, Côte d'Ivoire",  'group' => 'boutique'],
+            ['key' => 'shop_phone',       'value' => '+225 07 00 00 00 00',       'group' => 'boutique'],
+            ['key' => 'shop_hours',       'value' => 'Lun – Sam : 8h00 – 19h00', 'group' => 'boutique'],
+            ['key' => 'shop_gmaps_url',   'value' => 'https://maps.google.com', 'group' => 'boutique'],
+            ['key' => 'pickup_enabled',   'value' => '1',                         'group' => 'boutique'],
+            ['key' => 'pickup_message',   'value' => 'Venez récupérer votre commande directement en boutique. Gratuit et disponible sous 24h.', 'group' => 'boutique'],
+            ['key' => 'credit_enabled',   'value' => '1',                         'group' => 'credit'],
+            ['key' => 'credit_message',   'value' => "Repartez aujourd'hui avec votre smartphone et payez en plusieurs fois. Venez vous inscrire en boutique avec votre CNI.", 'group' => 'credit'],
+            ['key' => 'credit_conditions','value' => 'CNI requise. Acompte minimum. Durée selon accord.', 'group' => 'credit'],
+        ];
+        foreach ($boutiqueSettings as $s) Setting::create($s);
+
         $this->command->info('✅ Base de données peuplée avec succès !');
-        $this->command->info('👤 Admin: admin@ecommerce.ma / password');
-        $this->command->info('👤 Client: client@example.com / password');
+        $this->command->info('👤 Admin: admin@ecommerce.ci / password');
+        $this->command->info('👤 Client: client@ecommerce.ci / password');
     }
 }

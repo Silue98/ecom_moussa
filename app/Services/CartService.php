@@ -117,14 +117,17 @@ class CartService
             }
         }
 
-        $tax      = ($subtotal - $discount) * 0.20;
-        $shipping = $subtotal >= 30000 ? 0 : 2000;
-        $total    = $subtotal - $discount + $tax + $shipping;
+        // TVA à 0 — prix TTC directement dans les produits
+        $tax      = 0;
+        $threshold = (float) setting('free_shipping_threshold', 30000);
+        $shipPrice = (float) setting('shipping_price', 2000);
+        $shipping = $subtotal >= $threshold ? 0 : $shipPrice;
+        $total    = $subtotal - $discount + $shipping;
 
         return compact('subtotal', 'discount', 'tax', 'shipping', 'total');
     }
 
-    public function mergGuestCart(int $userId): void
+    public function mergeGuestCart(int $userId): void
     {
         $sessionId   = session()->getId();
         $guestCart   = \App\Models\Cart::where('session_id', $sessionId)->first();

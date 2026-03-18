@@ -14,6 +14,7 @@ use App\Filament\Admin\Widgets\LatestOrders;
 use App\Filament\Admin\Widgets\RevenueChart;
 use App\Filament\Admin\Widgets\StatsOverview;
 use App\Filament\Admin\Widgets\TopProducts;
+use App\Filament\Admin\Pages\BoutiqueSettings;
 use App\Filament\Admin\Pages\Dashboard;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -53,6 +54,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->pages([
                 Dashboard::class,
+                BoutiqueSettings::class,
             ])
             ->widgets([
                 StatsOverview::class,

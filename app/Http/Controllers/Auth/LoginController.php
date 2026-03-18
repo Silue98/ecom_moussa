@@ -30,7 +30,7 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             // Fusionner panier invité avec panier utilisateur
-            app(CartService::class)->mergGuestCart(Auth::id());
+            app(CartService::class)->mergeGuestCart(Auth::id());
 
             return redirect()
                 ->intended(route('home'))

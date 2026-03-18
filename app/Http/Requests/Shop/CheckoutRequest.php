@@ -22,7 +22,7 @@ class CheckoutRequest extends FormRequest
             'shipping_zip'     => ['nullable', 'string', 'max:10'],   // optionnel (pas toujours dispo en CI)
             'shipping_state'   => ['nullable', 'string', 'max:100'],
             'shipping_country' => ['nullable', 'string', 'max:100'],  // géré côté serveur si absent
-            'payment_method'   => ['required', 'in:cod,card,bank_transfer'],
+            'payment_method'   => ['required', 'in:cod'],
             'notes'            => ['nullable', 'string', 'max:500'],
 
             // Facturation

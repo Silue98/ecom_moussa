@@ -6,6 +6,7 @@ use App\Jobs\SendOrderNotifications;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\User;
+use App\Notifications\LowStockAlert;
 use App\Notifications\NewOrderAdmin;
 use App\Notifications\OrderConfirmed;
 use Illuminate\Support\Facades\Auth;
@@ -45,10 +46,12 @@ class OrderService
                 }
             }
 
-            $taxRate        = 0.20;
-            $taxAmount      = ($subtotal - $discountAmount) * $taxRate;
-            $shippingAmount = $subtotal >= 30000 ? 0 : 2000;
-            $total          = $subtotal - $discountAmount + $taxAmount + $shippingAmount;
+            // TVA à 0 côté client — l'admin gère les prix TTC directement dans les produits
+            $taxAmount      = 0;
+            $threshold      = (float) setting('free_shipping_threshold', 30000);
+            $shipPrice      = (float) setting('shipping_price', 2000);
+            $shippingAmount = $subtotal >= $threshold ? 0 : $shipPrice;
+            $total          = $subtotal - $discountAmount + $shippingAmount;
 
             // user_id : connecté ou invité (null)
             $userId = Auth::id();
@@ -82,8 +85,16 @@ class OrderService
                 'notes'            => $data['notes'] ?? null,
             ]);
 
-            // Lignes de commande + décrément stock
+            // Lignes de commande + vérification stock + décrément
             foreach ($items as $item) {
+                // ── Vérification stock suffisant ──────────────────────────
+                if ($item->product->quantity < $item->quantity) {
+                    throw new \Exception(
+                        "Stock insuffisant pour « {$item->product->name} » " .
+                        "(disponible : {$item->product->quantity}, demandé : {$item->quantity})."
+                    );
+                }
+
                 $order->items()->create([
                     'product_id' => $item->product_id,
                     'variant_id' => $item->variant_id,
@@ -96,6 +107,13 @@ class OrderService
                 ]);
 
                 $item->product->decrement('quantity', $item->quantity);
+
+                // ── Alerte stock bas après décrément ──────────────────────
+                $freshProduct = $item->product->fresh();
+                if ($freshProduct && $freshProduct->isLowStock()) {
+                    User::whereIn('role', ['admin', 'manager'])
+                        ->each(fn ($admin) => $admin->notify(new LowStockAlert($freshProduct)));
+                }
             }
 
             if ($coupon) {
@@ -125,9 +143,19 @@ class OrderService
 
     protected function dispatchNotifications(Order $order): void
     {
+        // ── WhatsApp : toujours dispatché EN PREMIER, indépendamment du mail ──
+        try {
+            \App\Jobs\SendWhatsAppOrderConfirmation::dispatch($order->id)
+                ->delay(now()->addSeconds(3));
+            Log::info("[OrderService] Job WhatsApp dispatché pour commande #{$order->order_number}.");
+        } catch (\Throwable $e) {
+            Log::warning("[OrderService] Impossible de dispatcher WhatsApp pour #{$order->order_number} : {$e->getMessage()}");
+        }
+
+        // ── Mail : envoi immédiat, fallback queue si KO ───────────────────
         try {
             $this->sendNow($order);
-            Log::info("[OrderService] Notifications envoyées pour commande #{$order->order_number}.");
+            Log::info("[OrderService] Notifications email envoyées pour commande #{$order->order_number}.");
         } catch (\Throwable $e) {
             Log::warning("[OrderService] Mail KO pour #{$order->order_number} : {$e->getMessage()} → mis en queue.");
             SendOrderNotifications::dispatch($order->id)->delay(now()->addMinutes(2));
@@ -136,17 +164,19 @@ class OrderService
 
     protected function sendNow(Order $order): void
     {
-        // Notification client (connecté uniquement)
         if ($order->user) {
-            $order->user->notify(new OrderConfirmed($order));
+            $order->user->notify(
+                (new OrderConfirmed($order))->onConnection('sync')
+            );
         } elseif ($order->shipping_email) {
-            // Invité : envoi direct par email sans notification Laravel
             \Illuminate\Support\Facades\Mail::to($order->shipping_email)
                 ->send(new \App\Mail\GuestOrderConfirmed($order));
         }
 
         // Admins / managers
         User::whereIn('role', ['admin', 'manager'])
-            ->each(fn ($admin) => $admin->notify(new NewOrderAdmin($order)));
+            ->each(fn ($admin) => $admin->notify(
+                (new NewOrderAdmin($order))->onConnection('sync')
+            ));
     }
 }

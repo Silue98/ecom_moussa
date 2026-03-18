@@ -106,40 +106,22 @@
                     </div>
                 </div>
 
-                {{-- Mode de paiement --}}
+                {{-- Mode de paiement : COD uniquement --}}
+                <input type="hidden" name="payment_method" value="cod">
                 <div class="bg-white rounded-xl shadow p-6">
                     <h2 class="text-lg font-bold mb-4">💳 Mode de paiement</h2>
-                    <div class="space-y-3">
-
-                        <label class="flex items-center p-4 border-2 border-blue-500 rounded-lg cursor-pointer bg-blue-50">
-                            <input type="radio" name="payment_method" value="cod" checked class="mr-3">
-                            <span class="text-2xl mr-3">💵</span>
-                            <div>
-                                <div class="font-semibold">Paiement à la livraison</div>
-                                <div class="text-sm text-gray-500">Payez en espèces à la réception</div>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
-                            <input type="radio" name="payment_method" value="card" class="mr-3">
-                            <span class="text-2xl mr-3">💳</span>
-                            <div>
-                                <div class="font-semibold">Carte bancaire</div>
-                                <div class="text-sm text-gray-500">Visa, Mastercard sécurisé</div>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
-                            <input type="radio" name="payment_method" value="bank_transfer" class="mr-3">
-                            <span class="text-2xl mr-3">🏦</span>
-                            <div>
-                                <div class="font-semibold">Virement bancaire / Mobile Money</div>
-                                <div class="text-sm text-gray-500">Orange Money, Wave, MTN MoMo</div>
-                            </div>
-                        </label>
-
+                    <div class="flex items-start gap-4 p-4 border-2 border-green-400 rounded-xl bg-green-50">
+                        <span class="text-3xl mt-1">💵</span>
+                        <div>
+                            <p class="font-semibold text-green-800 text-base">Paiement à la livraison</p>
+                            <p class="text-sm text-green-700 mt-1">
+                                Vous réglez en espèces directement au livreur lors de la réception de votre commande.
+                                Aucune information bancaire requise.
+                            </p>
+                        </div>
+                        <span class="ml-auto text-green-500 text-xl">✅</span>
                     </div>
-                    @error('payment_method')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
+                    {{-- Prochainement : Mobile Money (Wave CI, Orange Money, MTN CI) --}}
                 </div>
 
                 {{-- Notes --}}
@@ -179,20 +161,20 @@
 
                     @php
                         $subtotal = $cart->total;
-                        $shipping = $subtotal >= 30000 ? 0 : 2000;
-                        $tax      = $subtotal * 0.20;
+                        $threshold = (float) (\App\Models\Setting::get('free_shipping_threshold', 30000));
+                        $shipping = $subtotal >= $threshold ? 0 : (float) (\App\Models\Setting::get('shipping_price', 2000));
                         $discount = 0;
                         if (session('coupon_code')) {
                             $coupon = \App\Models\Coupon::where('code', session('coupon_code'))->first();
                             if ($coupon) $discount = $coupon->calculateDiscount($subtotal);
                         }
-                        $total = $subtotal + $shipping + $tax - $discount;
+                        $total = $subtotal + $shipping - $discount;
                     @endphp
 
                     <div class="border-t pt-4 space-y-2 text-sm">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Sous-total</span>
-                            <span>{{ number_format($subtotal, 0, ',', ' ') }} XOF</span>
+                            <span class="font-medium">{{ number_format($subtotal, 0, ',', ' ') }} XOF</span>
                         </div>
                         @if($discount > 0)
                         <div class="flex justify-between text-green-600">
@@ -201,16 +183,26 @@
                         </div>
                         @endif
                         <input type="hidden" name="coupon_code" value="{{ session('coupon_code') }}">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Livraison</span>
-                            <span>{{ $shipping > 0 ? number_format($shipping, 0, ',', ' ') . ' XOF' : '🎉 Gratuite' }}</span>
+
+                        {{-- Frais de livraison --}}
+                        <div class="flex justify-between {{ $shipping == 0 ? 'text-green-600' : 'text-gray-600' }}">
+                            <span>Frais de livraison</span>
+                            @if($shipping == 0)
+                                <span class="font-medium">🎉 Gratuite</span>
+                            @else
+                                <span class="font-medium">{{ number_format($shipping, 0, ',', ' ') }} XOF</span>
+                            @endif
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">TVA (20%)</span>
-                            <span>{{ number_format($tax, 0, ',', ' ') }} XOF</span>
+
+                        @if($shipping > 0)
+                        <div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
+                            💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} XOF d'achat
+                            (il vous manque {{ number_format($threshold - $subtotal, 0, ',', ' ') }} XOF)
                         </div>
-                        <div class="border-t pt-2 flex justify-between font-bold text-lg">
-                            <span>Total</span>
+                        @endif
+
+                        <div class="border-t pt-2 flex justify-between font-bold text-lg mt-1">
+                            <span>Total à payer</span>
                             <span class="text-blue-600">{{ number_format($total, 0, ',', ' ') }} XOF</span>
                         </div>
                     </div>

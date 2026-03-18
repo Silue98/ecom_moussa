@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\ProfileUpdateRequest;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -44,12 +45,7 @@ class AccountController extends Controller
     public function updateProfile(ProfileUpdateRequest $request)
     {
         $user = Auth::user();
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
-        ]);
-
+        // La validation est déjà assurée par ProfileUpdateRequest (injection de dépendance)
         $user->update($request->only('name', 'email', 'phone'));
         return back()->with('success', 'Profil mis à jour');
     }
@@ -76,16 +72,16 @@ class AccountController extends Controller
         return view('shop.account.wishlist', compact('wishlist'));
     }
 
-    public function toggleWishlist(Request $request, int $productId)
+    public function toggleWishlist(Request $request, Product $product)
     {
         $user = Auth::user();
-        $existing = $user->wishlist()->where('product_id', $productId)->first();
+        $existing = $user->wishlist()->where('product_id', $product->id)->first();
 
         if ($existing) {
             $existing->delete();
             $inWishlist = false;
         } else {
-            $user->wishlist()->create(['product_id' => $productId]);
+            $user->wishlist()->create(['product_id' => $product->id]);
             $inWishlist = true;
         }
 

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Notifications\NewOrderAdmin;
 use App\Notifications\OrderConfirmed;
+use App\Jobs\SendWhatsAppOrderConfirmation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -52,7 +53,13 @@ class SendOrderNotifications implements ShouldQueue
             Log::info("[SendOrderNotifications] Email confirmation envoyé au client {$order->user->email} pour commande #{$order->order_number}.");
         }
 
-        // ── 2. Notifications admins / managers ────────────────────────────
+        // ── 2. WhatsApp via Green API ─────────────────────────────────────
+        SendWhatsAppOrderConfirmation::dispatch($this->orderId)
+            ->delay(now()->addSeconds(5)); // léger délai pour éviter surcharge
+
+        Log::info("[SendOrderNotifications] Job WhatsApp dispatché pour commande #{$order->order_number}.");
+
+        // ── 3. Notifications admins / managers ────────────────────────────
         $admins = User::whereIn('role', ['admin', 'manager'])->get();
 
         foreach ($admins as $admin) {

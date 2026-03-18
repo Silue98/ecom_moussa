@@ -57,7 +57,7 @@
                                 <button type="button" onclick="let i=this.previousElementSibling;i.value=parseInt(i.value)+1;i.form.submit()"
                                     class="px-2 py-1 hover:bg-gray-100 rounded-r-lg">+</button>
                             </form>
-                            <div class="text-right font-bold mt-1">{{ number_format($item->subtotal, 2) }} FCFA</div>
+                            <div class="text-right font-bold mt-1">{{ number_format($item->subtotal, 0, ',', ' ') }} XOF</div>
                         </div>
                     </div>
                 </div>
@@ -90,28 +90,29 @@
                     @endif
 
                     <div class="space-y-3 text-sm">
+                        @php
+                            $threshold = (float) \App\Models\Setting::get('free_shipping_threshold', 30000);
+                            $shipPrice = (float) \App\Models\Setting::get('shipping_price', 2000);
+                            $shipping  = $cart->total >= $threshold ? 0 : $shipPrice;
+                            $cartTotal = $cart->total + $shipping;
+                        @endphp
                         <div class="flex justify-between">
                             <span class="text-gray-600">Sous-total</span>
-                            <span>{{ number_format($cart->total, 2) }} FCFA</span>
+                            <span class="font-medium">{{ number_format($cart->total, 0, ',', ' ') }} XOF</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Livraison</span>
-                            <span class="{{ $cart->total >= 30000 ? 'text-green-600' : '' }}">
-                                {{ $cart->total >= 30000 ? 'Gratuite' : '2 000 FCFA' }}
-                            </span>
+                        <div class="flex justify-between {{ $shipping == 0 ? 'text-green-600' : 'text-gray-600' }}">
+                            <span>Frais de livraison</span>
+                            <span class="font-medium">{{ $shipping == 0 ? '🎉 Gratuite' : number_format($shipping, 0, ',', ' ') . ' XOF' }}</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">TVA (20%)</span>
-                            <span>{{ number_format($cart->total * 0.20, 2) }} FCFA</span>
+                        @if($cart->total < $threshold)
+                        <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 p-2.5 rounded-lg">
+                            💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} XOF
+                            (il vous manque {{ number_format($threshold - $cart->total, 0, ',', ' ') }} XOF)
                         </div>
-                        @if($cart->total < 500)
-                            <div class="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                                Ajoutez {{ number_format(30000 - $cart->total, 2) }} FCFA pour la livraison gratuite
-                            </div>
                         @endif
                         <div class="border-t pt-3 flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span class="text-blue-600">{{ number_format($cart->total + ($cart->total * 0.20) + ($cart->total >= 30000 ? 0 : 2000), 2) }} FCFA</span>
+                            <span class="text-blue-600">{{ number_format($cartTotal, 0, ',', ' ') }} XOF</span>
                         </div>
                     </div>
 

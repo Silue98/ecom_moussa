@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'E-Commerce') — {{ config('app.name') }}</title>
-    <meta name="description" content="@yield('description', 'Boutique en ligne — Les meilleures offres au Maroc')">
+    <meta name="description" content="@yield('description', 'Boutique en ligne de smartphones et accessoires en Côte d\'Ivoire')">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Alpine.js --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -137,6 +137,20 @@
 
         {{-- Menu mobile --}}
         <div x-show="mobileOpen" x-transition class="md:hidden pb-4 border-t border-gray-100 pt-3">
+
+            {{-- Catégories sur mobile --}}
+            <div class="mb-3 pb-3 border-b border-gray-100">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 mb-2">Catégories</p>
+                <div class="space-y-1">
+                    <a href="{{ route('products.index') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-blue-50 text-blue-600 font-medium">📱 Tous les produits</a>
+                    @foreach(\App\Models\Category::where('is_active', true)->whereNull('parent_id')->orderBy('sort_order')->take(6)->get() as $cat)
+                        <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
+                           class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 text-gray-700">
+                            {{ $cat->name }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
             @auth
                 <div class="space-y-1">
                     <a href="{{ route('account') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">👤 Mon compte</a>
@@ -178,6 +192,41 @@
     </div>
 </nav>
 
+{{-- ══ Barre info boutique & crédit (sticky sous navbar) ══ --}}
+@php
+    $pickupEnabled = setting('pickup_enabled', '0') === '1';
+    $creditEnabled = setting('credit_enabled', '0') === '1';
+    $shopPhone     = setting('shop_phone', '');
+@endphp
+@if($pickupEnabled || $creditEnabled)
+<div class="bg-blue-700 text-white text-xs py-1.5 px-4 sticky top-16 z-40">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-4 sm:gap-8 flex-wrap">
+        @if($pickupEnabled)
+        <a href="{{ route('boutique.info') }}" class="flex items-center gap-1.5 hover:text-blue-200 transition">
+            <span>🏪</span>
+            <span class="font-medium">Retrait en boutique — Gratuit</span>
+        </a>
+        @endif
+        @if($pickupEnabled && $creditEnabled)
+            <span class="text-blue-400 hidden sm:inline">|</span>
+        @endif
+        @if($creditEnabled)
+        <a href="{{ route('credit.info') }}" class="flex items-center gap-1.5 hover:text-blue-200 transition">
+            <span>💳</span>
+            <span class="font-medium">Achat à crédit disponible</span>
+            <span class="bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full ml-1">En savoir +</span>
+        </a>
+        @endif
+        @if($shopPhone)
+        <a href="tel:{{ $shopPhone }}" class="flex items-center gap-1.5 hover:text-blue-200 transition hidden sm:flex">
+            <span>📞</span>
+            <span>{{ $shopPhone }}</span>
+        </a>
+        @endif
+    </div>
+</div>
+@endif
+
 {{-- ═══════════════════════════════ FLASH MESSAGES ═══════════════════════ --}}
 <x-flash-message />
 
@@ -193,7 +242,7 @@
             <div>
                 <h3 class="font-bold text-lg mb-4">🛍️ {{ config('app.name') }}</h3>
                 <p class="text-gray-400 text-sm leading-relaxed">
-                    Votre boutique en ligne de confiance. Livraison rapide partout au Maroc.
+                    Votre boutique de smartphones et accessoires en Côte d'Ivoire. Livraison rapide à Abidjan et partout en CI.
                 </p>
                 <div class="flex space-x-3 mt-4">
                     <a href="#" class="text-gray-400 hover:text-white transition">📘</a>
@@ -221,11 +270,27 @@
                 </ul>
             </div>
             <div>
-                <h3 class="font-bold mb-4">Contact</h3>
+                <h3 class="font-bold mb-4">Contact & Boutique</h3>
                 <ul class="space-y-2 text-gray-400 text-sm">
-                    <li>📧 <a href="mailto:contact@ecommerce.ma" class="hover:text-white">contact@ecommerce.ma</a></li>
-                    <li>📞 +212 6 00 00 00 00</li>
-                    <li>📍 Casablanca, Maroc</li>
+                    <li>📧 <a href="mailto:{{ setting('site_email', 'commandes@phonestore.ci') }}" class="hover:text-white">{{ setting('site_email', 'commandes@phonestore.ci') }}</a></li>
+                    @if(setting('shop_phone'))
+                    <li><a href="tel:{{ setting('shop_phone') }}" class="hover:text-white">📞 {{ setting('shop_phone') }}</a></li>
+                    @endif
+                    @if(setting('shop_address'))
+                    <li>
+                        @if(setting('shop_gmaps_url') && setting('shop_gmaps_url') !== 'https://maps.google.com')
+                        <a href="{{ setting('shop_gmaps_url') }}" target="_blank" class="hover:text-white">
+                            📍 {{ setting('shop_address') }}<br>
+                            <span class="text-xs text-blue-400">→ Voir sur Google Maps</span>
+                        </a>
+                        @else
+                        <span>📍 {{ setting('shop_address') }}</span>
+                        @endif
+                    </li>
+                    @endif
+                    @if(setting('shop_hours'))
+                    <li>🕐 {{ setting('shop_hours') }}</li>
+                    @endif
                     <li class="pt-2">
                         <span class="bg-green-800 text-green-200 text-xs px-2 py-1 rounded-full">✅ Paiement sécurisé</span>
                     </li>
@@ -239,7 +304,7 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <p class="text-gray-400 text-sm">© {{ date('Y') }} {{ config('app.name') }}. Tous droits réservés. Fait avec ❤️ et Laravel 12</p>
                 <div class="flex items-center gap-4 text-gray-400 text-sm">
-                    <span>💳 CB</span><span>💵 Espèces</span><span>🏦 Virement</span>
+                    <span>💵 Paiement à la livraison</span>
                 </div>
             </div>
         </div>

@@ -133,17 +133,6 @@
 </section>
 @endif
 
-<!-- CTA Banner -->
-<!-- <section class="bg-gradient-to-r from-orange-500 to-red-500 text-white py-16">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-        <h2 class="text-3xl font-bold mb-4">🎉 Offre spéciale du moment</h2>
-        <p class="text-lg mb-8 text-orange-100">Utilisez le code <span class="bg-white text-orange-600 px-3 py-1 rounded font-bold">BIENVENUE10</span> pour 10% de réduction</p>
-        <a href="{{ route('products.index') }}" class="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition">
-            Profiter de l'offre
-        </a>
-    </div>
-</section> -->
-
 {{-- ══ Section Boutique & Crédit ══ --}}
 @php
     $pickupEnabled    = setting('pickup_enabled', '0') === '1';
@@ -208,6 +197,13 @@
                     </div>
                     @endif
                 </div>
+
+                {{-- ── Carte Leaflet (s'affiche uniquement si les coordonnées sont renseignées dans l'admin) ── --}}
+                @if($hasCoords)
+                <div class="rounded-xl overflow-hidden mb-4 border-2 border-white/20" style="height: 220px;">
+                    <div id="boutique-map" style="height: 100%; width: 100%;"></div>
+                </div>
+                @endif
 
                 <div class="flex flex-col sm:flex-row gap-3">
                     @if($shopGmapsUrl && $shopGmapsUrl !== 'https://maps.google.com')

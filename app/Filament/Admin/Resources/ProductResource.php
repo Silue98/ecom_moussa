@@ -152,7 +152,12 @@ class ProductResource extends Resource
                             Forms\Components\FileUpload::make('image_path')
                                 ->label('Image')
                                 ->image()
+                                ->disk('public')
                                 ->directory('products')
+                                ->visibility('public')
+                                ->imageResizeMode('cover')
+                                ->imageCropAspectRatio('1:1')
+                                ->maxSize(2048)
                                 ->required(),
                             Forms\Components\TextInput::make('alt_text')
                                 ->label('Texte alternatif'),
