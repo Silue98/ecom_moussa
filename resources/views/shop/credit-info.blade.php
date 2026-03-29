@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Achat à crédit — Phone Store CI')
+@section('title', 'Achat à crédit — Trust Phone CI')
 @section('content')
 <div class="max-w-3xl mx-auto px-4 py-10">
 

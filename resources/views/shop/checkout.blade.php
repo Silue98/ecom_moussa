@@ -3,6 +3,18 @@
 @section('title', 'Finaliser ma commande')
 
 @section('content')
+@php
+    $subtotal  = $cart->total;
+    $threshold = (float) (\App\Models\Setting::get('free_shipping_threshold', 30000));
+    $shipPrice = (float) (\App\Models\Setting::get('shipping_price', 2000));
+    $shipping  = $subtotal >= $threshold ? 0 : $shipPrice;
+    $discount  = 0;
+    if (session('coupon_code')) {
+        $coupon = \App\Models\Coupon::where('code', session('coupon_code'))->first();
+        if ($coupon) $discount = $coupon->calculateDiscount($subtotal);
+    }
+    $total = $subtotal + $shipping - $discount;
+@endphp
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-8">💳 Finaliser ma commande</h1>
 
@@ -44,9 +56,60 @@
                 </div>
                 @endguest
 
-                {{-- Adresse de livraison --}}
+                {{-- Mode de livraison --}}
                 <div class="bg-white rounded-xl shadow p-6">
-                    <h2 class="text-lg font-bold mb-4">📦 Adresse de livraison</h2>
+                    <h2 class="text-lg font-bold mb-4">🚚 Mode de réception</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                        {{-- Retrait en boutique --}}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="delivery_type" value="pickup"
+                                class="sr-only peer"
+                                {{ old('delivery_type', 'delivery') === 'pickup' ? 'checked' : '' }}>
+                            <div class="border-2 rounded-xl p-4 flex flex-col gap-2 peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-green-300 transition">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🏪</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Retrait en boutique</p>
+                                        <p class="text-xs text-gray-500">Venez récupérer votre commande</p>
+                                    </div>
+                                    <span class="ml-auto font-bold text-green-600">Gratuit</span>
+                                </div>
+                            </div>
+                        </label>
+
+                        {{-- Livraison à domicile --}}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="delivery_type" value="delivery"
+                                class="sr-only peer"
+                                {{ old('delivery_type', 'delivery') === 'delivery' ? 'checked' : '' }}>
+                            <div class="border-2 rounded-xl p-4 flex flex-col gap-2 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-blue-300 transition">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🛵</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Livraison à domicile</p>
+                                        <p class="text-xs text-gray-500">Livré chez vous</p>
+                                    </div>
+                                    <span class="ml-auto font-bold text-blue-600" id="delivery-price-label">
+                                        @if($subtotal >= $threshold)
+                                            Gratuit
+                                        @else
+                                            {{ number_format($shipPrice, 0, ',', ' ') }} XOF
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        </label>
+
+                    </div>
+                    @error('delivery_type')
+                        <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Adresse de livraison (masquée si retrait) --}}
+                <div class="bg-white rounded-xl shadow p-6" id="address-block">
+                    <h2 class="text-lg font-bold mb-4" id="address-title">📦 Adresse de livraison</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                         <div>
@@ -159,17 +222,7 @@
                         @endforeach
                     </div>
 
-                    @php
-                        $subtotal = $cart->total;
-                        $threshold = (float) (\App\Models\Setting::get('free_shipping_threshold', 30000));
-                        $shipping = $subtotal >= $threshold ? 0 : (float) (\App\Models\Setting::get('shipping_price', 2000));
-                        $discount = 0;
-                        if (session('coupon_code')) {
-                            $coupon = \App\Models\Coupon::where('code', session('coupon_code'))->first();
-                            if ($coupon) $discount = $coupon->calculateDiscount($subtotal);
-                        }
-                        $total = $subtotal + $shipping - $discount;
-                    @endphp
+
 
                     <div class="border-t pt-4 space-y-2 text-sm">
                         <div class="flex justify-between">
@@ -185,17 +238,19 @@
                         <input type="hidden" name="coupon_code" value="{{ session('coupon_code') }}">
 
                         {{-- Frais de livraison --}}
-                        <div class="flex justify-between {{ $shipping == 0 ? 'text-green-600' : 'text-gray-600' }}">
-                            <span>Frais de livraison</span>
-                            @if($shipping == 0)
-                                <span class="font-medium">🎉 Gratuite</span>
-                            @else
-                                <span class="font-medium">{{ number_format($shipping, 0, ',', ' ') }} XOF</span>
-                            @endif
+                        <div class="flex justify-between" id="shipping-line">
+                            <span class="text-gray-600">Frais de livraison</span>
+                            <span class="font-medium" id="shipping-display">
+                                @if($shipping == 0)
+                                    <span class="text-green-600">🎉 Gratuit</span>
+                                @else
+                                    {{ number_format($shipping, 0, ',', ' ') }} XOF
+                                @endif
+                            </span>
                         </div>
 
                         @if($shipping > 0)
-                        <div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
+                        <div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700" id="shipping-hint">
                             💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} XOF d'achat
                             (il vous manque {{ number_format($threshold - $subtotal, 0, ',', ' ') }} XOF)
                         </div>
@@ -203,7 +258,7 @@
 
                         <div class="border-t pt-2 flex justify-between font-bold text-lg mt-1">
                             <span>Total à payer</span>
-                            <span class="text-blue-600">{{ number_format($total, 0, ',', ' ') }} XOF</span>
+                            <span class="text-blue-600" id="total-display">{{ number_format($total, 0, ',', ' ') }} XOF</span>
                         </div>
                     </div>
 
@@ -223,3 +278,57 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const subtotal  = {{ $subtotal }};
+    const shipPrice = {{ $shipPrice }};
+    const discount  = {{ $discount }};
+    const threshold = {{ $threshold }};
+
+    const addressBlock    = document.getElementById('address-block');
+    const addressTitle    = document.getElementById('address-title');
+    const shippingDisplay = document.getElementById('shipping-display');
+    const shippingHint    = document.getElementById('shipping-hint');
+    const totalDisplay    = document.getElementById('total-display');
+
+    function formatNumber(n) {
+        return n.toLocaleString('fr-FR').replace(/\s/g, ' ') + ' XOF';
+    }
+
+    function updateDelivery(type) {
+        let shipping = 0;
+
+        if (type === 'pickup') {
+            // Retrait en boutique — pas de frais
+            addressTitle.textContent    = '🏪 Adresse de retrait';
+            shippingDisplay.innerHTML   = '<span class="text-green-600">🎉 Gratuit</span>';
+            if (shippingHint) shippingHint.style.display = 'none';
+        } else {
+            // Livraison à domicile
+            addressTitle.textContent  = '📦 Adresse de livraison';
+            shipping = subtotal >= threshold ? 0 : shipPrice;
+
+            if (shipping === 0) {
+                shippingDisplay.innerHTML = '<span class="text-green-600">🎉 Gratuit</span>';
+                if (shippingHint) shippingHint.style.display = 'none';
+            } else {
+                shippingDisplay.innerHTML = formatNumber(shipping);
+                if (shippingHint) shippingHint.style.display = 'block';
+            }
+        }
+
+        const total = subtotal + shipping - discount;
+        totalDisplay.textContent = formatNumber(total);
+    }
+
+    // Écouter les changements de radio
+    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
+        radio.addEventListener('change', e => updateDelivery(e.target.value));
+    });
+
+    // Initialiser au chargement
+    const selected = document.querySelector('input[name="delivery_type"]:checked');
+    if (selected) updateDelivery(selected.value);
+</script>
+@endpush

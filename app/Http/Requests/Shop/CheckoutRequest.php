@@ -24,6 +24,7 @@ class CheckoutRequest extends FormRequest
             'shipping_country' => ['nullable', 'string', 'max:100'],  // géré côté serveur si absent
             'payment_method'   => ['required', 'in:cod'],
             'notes'            => ['nullable', 'string', 'max:500'],
+            'delivery_type'    => ['required', 'in:pickup,delivery'],
 
             // Facturation
             'billing_same'    => ['nullable', 'boolean'],
@@ -49,6 +50,8 @@ class CheckoutRequest extends FormRequest
             'shipping_city.required'    => 'La ville est obligatoire.',
             'payment_method.required'   => 'Veuillez choisir un mode de paiement.',
             'payment_method.in'         => 'Le mode de paiement sélectionné est invalide.',
+            'delivery_type.required'    => 'Veuillez choisir entre retrait en boutique ou livraison.',
+            'delivery_type.in'          => 'Le mode de livraison sélectionné est invalide.',
         ];
     }
 }

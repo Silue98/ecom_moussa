@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Notre Boutique — Phone Store CI')
+@section('title', 'Notre Boutique — Trust Phone CI')
 @section('content')
 <div class="max-w-3xl mx-auto px-4 py-10">
 
     @php
-        $shopName = setting('shop_name', 'Phone Store CI');
+        $shopName = setting('shop_name', 'Trust Phone CI');
         $address  = setting('shop_address', '');
         $city     = setting('shop_city', '');
         $phone    = setting('shop_phone', '');

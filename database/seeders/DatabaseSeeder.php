@@ -119,7 +119,7 @@ class DatabaseSeeder extends Seeder
 
         // Settings boutique
         $boutiqueSettings = [
-            ['key' => 'shop_name',        'value' => 'Phone Store CI',            'group' => 'boutique'],
+            ['key' => 'shop_name',        'value' => 'Trust Phone CI',            'group' => 'boutique'],
             ['key' => 'shop_address',     'value' => 'Votre adresse, Abidjan',    'group' => 'boutique'],
             ['key' => 'shop_city',        'value' => "Abidjan, Côte d'Ivoire",  'group' => 'boutique'],
             ['key' => 'shop_phone',       'value' => '+225 07 00 00 00 00',       'group' => 'boutique'],

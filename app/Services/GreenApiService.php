@@ -33,14 +33,11 @@ class GreenApiService
             return false;
         }
 
-        // Nettoyer le numéro
+        // Nettoyer le numéro (garder uniquement les chiffres)
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
-        // Ajouter indicatif pays si numéro local
-        if (str_starts_with($phone, '0') && strlen($phone) <= 10) {
-            $countryCode = $this->getSetting('greenapi_default_country_code', '225');
-            $phone = $countryCode . $phone;
-        }
+        // Garder les 8 derniers chiffres + code pays 225 (Côte d'Ivoire)
+        $phone = '225' . substr($phone, -8);
 
         $chatId = $phone . '@c.us';
         $url    = "{$this->baseUrl}/waInstance{$instanceId}/sendMessage/{$apiToken}";
@@ -48,7 +45,6 @@ class GreenApiService
         Log::info("[GreenAPI] Tentative d'envoi à {$phone}.", ['chatId' => $chatId]);
 
         try {
-            // Utilisation directe de cURL pour bypasser le problème SSL sur Windows
             $ch = curl_init();
             curl_setopt_array($ch, [
                 CURLOPT_URL            => $url,
@@ -59,8 +55,8 @@ class GreenApiService
                     'message' => $message,
                 ]),
                 CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-                CURLOPT_SSL_VERIFYPEER => false,  // Fix SSL Windows local
-                CURLOPT_SSL_VERIFYHOST => false,  // Fix SSL Windows local
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
                 CURLOPT_TIMEOUT        => 15,
             ]);
 

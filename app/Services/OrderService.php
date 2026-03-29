@@ -50,7 +50,13 @@ class OrderService
             $taxAmount      = 0;
             $threshold      = (float) setting('free_shipping_threshold', 30000);
             $shipPrice      = (float) setting('shipping_price', 2000);
-            $shippingAmount = $subtotal >= $threshold ? 0 : $shipPrice;
+
+            // Si retrait en boutique → frais de livraison = 0
+            if (($data['delivery_type'] ?? 'delivery') === 'pickup') {
+                $shippingAmount = 0;
+            } else {
+                $shippingAmount = $subtotal >= $threshold ? 0 : $shipPrice;
+            }
             $total          = $subtotal - $discountAmount + $shippingAmount;
 
             // user_id : connecté ou invité (null)
