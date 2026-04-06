@@ -54,8 +54,6 @@ return new class extends Migration
             $table->decimal('shipping_amount', 10, 2)->default(0);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
-            $table->foreignId('coupon_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('coupon_code')->nullable();
             $table->string('shipping_name');
             $table->string('shipping_email');
             $table->string('shipping_phone', 20)->nullable();
