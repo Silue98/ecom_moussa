@@ -39,7 +39,7 @@ class TopProducts extends BaseWidget
                     ->alignCenter(),
                 Tables\Columns\TextColumn::make('total_revenue')
                     ->label('CA')
-                    ->formatStateUsing(fn ($state) => number_format($state, 0, ',', ' ') . ' XOF'),
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, ',', ' ') . ' FCFA'),
             ])
             ->heading('🏆 Top 10 Produits Vendus')
             ->paginated(false);

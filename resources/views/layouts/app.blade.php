@@ -4,25 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'E-Commerce') — {{ config('app.name') }}</title>
+    <title>@yield('title', 'TrustPhone CI') — {{ config('app.name') }}</title>
     <meta name="description" content="@yield('description', 'Boutique en ligne de smartphones et accessoires en Côte d\'Ivoire')">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Alpine.js --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @stack('head')
     @stack('styles')
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased">
 
 {{-- ═══════════════════════════════ NAVBAR ═══════════════════════════════ --}}
+@php
+    $navCategories = \App\Models\Category::where('is_active', true)
+        ->whereNull('parent_id')
+        ->orderBy('sort_order')
+        ->take(8)
+        ->get();
+@endphp
 <nav class="bg-white shadow-md sticky top-0 z-50" x-data="{ mobileOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
+        <div class="flex items-center justify-between h-20">
 
-            {{-- Logo --}}
-            <a href="{{ route('home') }}" class="flex items-center space-x-2 flex-shrink-0">
-                <span class="text-2xl">🛍️</span>
-                <span class="font-bold text-xl text-blue-600 hidden sm:block">{{ config('app.name', 'E-Commerce') }}</span>
-            </a>
+          {{-- Logo --}}
+<a href="{{ route('home') }}" class="flex items-center flex-shrink-0">
+   <img src="{{ asset('images/logo.svg') }}" alt="{{ config('app.name', 'TrustPhone CI') }}"
+     class="h-14 w-auto">
+</a>
 
             {{-- Recherche desktop --}}
             <div class="hidden md:flex flex-1 max-w-lg mx-8">
@@ -42,8 +50,8 @@
                 {{-- Cloche notifications --}}
                 <x-notification-bell />
 
-                {{-- Compte utilisateur --}}
-                @auth
+                {{-- ✅ CORRECTION 1 : @auth/@endauth + @guest/@endguest (desktop) --}}
+                @if(Auth::check())
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false"
                             class="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition text-sm font-medium">
@@ -92,14 +100,24 @@
                             </form>
                         </div>
                     </div>
-                @else
+                @endif {{-- endauth --}}
+                @if(!Auth::check())
                     <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 transition text-sm font-medium hidden sm:block">
                         Connexion
                     </a>
                     <a href="{{ route('register') }}" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
                         Inscription
                     </a>
-                @endauth
+                @endif {{-- endguest --}}
+
+                {{-- Comparateur --}}
+                @php $compareCount = count(session('compare', [])); @endphp
+                @if($compareCount > 0)
+                <a href="{{ route('compare.index') }}" class="relative flex items-center text-gray-700 hover:text-blue-600 transition p-1" title="Comparer {{ $compareCount }} produit(s)">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">{{ $compareCount }}</span>
+                </a>
+                @endif
 
                 {{-- Panier --}}
                 <a href="{{ route('cart') }}" class="relative flex items-center text-gray-700 hover:text-blue-600 transition p-1">
@@ -142,8 +160,8 @@
             <div class="mb-3 pb-3 border-b border-gray-100">
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 mb-2">Catégories</p>
                 <div class="space-y-1">
-                    <a href="{{ route('products.index') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-blue-50 text-blue-600 font-medium">📱 Tous les produits</a>
-                    @foreach(\App\Models\Category::where('is_active', true)->whereNull('parent_id')->orderBy('sort_order')->take(6)->get() as $cat)
+                    <a href="{{ route('products.index') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-blue-50 text-blue-600 font-medium">📱 Tous les iPhones</a>
+                    @foreach($navCategories->take(6) as $cat)
                         <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
                            class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100 text-gray-700">
                             {{ $cat->name }}
@@ -151,7 +169,8 @@
                     @endforeach
                 </div>
             </div>
-            @auth
+
+            @if(Auth::check())
                 <div class="space-y-1">
                     <a href="{{ route('account') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">👤 Mon compte</a>
                     <a href="{{ route('account.orders') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">📦 Mes commandes</a>
@@ -164,12 +183,13 @@
                         <button type="submit" class="block w-full text-left px-3 py-2 text-sm rounded-lg text-red-600 hover:bg-red-50">🚪 Déconnexion</button>
                     </form>
                 </div>
-            @else
+            @endif {{-- endauth --}}
+            @if(!Auth::check())
                 <div class="space-y-2">
                     <a href="{{ route('login') }}" class="block px-3 py-2 text-sm rounded-lg hover:bg-gray-100">Connexion</a>
                     <a href="{{ route('register') }}" class="block px-3 py-2 text-sm rounded-lg bg-blue-600 text-white text-center">Inscription</a>
                 </div>
-            @endauth
+            @endif {{-- endguest --}}
         </div>
     </div>
 
@@ -179,9 +199,9 @@
             <div class="flex items-center space-x-6 py-2 overflow-x-auto scrollbar-none">
                 <a href="{{ route('products.index') }}"
                     class="text-sm whitespace-nowrap hover:text-blue-200 transition font-medium {{ !request('category') ? 'text-white underline' : '' }}">
-                    Tous les produits
+                    Tous les iPhones
                 </a>
-                @foreach(\App\Models\Category::where('is_active', true)->whereNull('parent_id')->orderBy('sort_order')->take(8)->get() as $cat)
+                @foreach($navCategories as $cat)
                     <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
                         class="text-sm whitespace-nowrap hover:text-blue-200 transition {{ request('category') === $cat->slug ? 'text-white underline' : 'text-blue-100' }}">
                         {{ $cat->name }}
@@ -240,9 +260,9 @@
     <div class="max-w-7xl mx-auto px-4 py-12">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-                <h3 class="font-bold text-lg mb-4">🛍️ {{ config('app.name') }}</h3>
+                <h3 class="font-bold text-lg mb-4">📱 {{ config('app.name') }}</h3>
                 <p class="text-gray-400 text-sm leading-relaxed">
-                    Votre boutique de smartphones et accessoires en Côte d'Ivoire. Livraison rapide à Abidjan et partout en CI.
+                    Spécialiste iPhone en Côte d'Ivoire. iPhones neufs et débloqués. Paiement à la réception. Livraison rapide à Abidjan.
                 </p>
                 <div class="flex space-x-3 mt-4">
                     <a href="#" class="text-gray-400 hover:text-white transition">📘</a>
@@ -254,9 +274,10 @@
                 <h3 class="font-bold mb-4">Navigation</h3>
                 <ul class="space-y-2 text-gray-400 text-sm">
                     <li><a href="{{ route('home') }}" class="hover:text-white transition">Accueil</a></li>
-                    <li><a href="{{ route('products.index') }}" class="hover:text-white transition">Tous les produits</a></li>
-                    <li><a href="{{ route('products.index', ['on_sale' => 1]) }}" class="hover:text-white transition">Promotions</a></li>
-                    <li><a href="{{ route('products.index', ['is_new' => 1]) }}" class="hover:text-white transition">Nouveautés</a></li>
+                    <li><a href="{{ route('products.index') }}" class="hover:text-white transition">Tous les iPhones</a></li>
+                    <li><a href="{{ route('products.index', ['on_sale' => 1]) }}" class="hover:text-white transition">Promotions iPhone</a></li>
+                    <li><a href="{{ route('products.index', ['is_new' => 1]) }}" class="hover:text-white transition">iPhone 16 Series</a></li>
+                    <li><a href="{{ route('compare.index') }}" class="hover:text-white transition">Comparer des iPhones</a></li>
                 </ul>
             </div>
             <div>
@@ -302,7 +323,7 @@
         </div>
         <div class="border-t border-gray-700 mt-8 pt-8">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-gray-400 text-sm">© {{ date('Y') }} {{ config('app.name') }}. Tous droits réservés. Fait avec ❤️ et Laravel 12</p>
+                <p class="text-gray-400 text-sm">© {{ date('Y') }} {{ config('app.name') }}. Tous droits réservés. Spécialiste iPhone — Abidjan, Côte d'Ivoire</p>
                 <div class="flex items-center gap-4 text-gray-400 text-sm">
                     <span>💵 Paiement à la livraison</span>
                 </div>
@@ -310,6 +331,80 @@
         </div>
     </div>
 </footer>
+
+{{-- ── Bandeau comparateur flottant ── --}}
+@php $compareCount = count(session('compare', [])); @endphp
+@if($compareCount > 0)
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg py-3 px-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <p class="text-sm text-gray-700 font-medium">
+            ⚖️ <span class="font-bold">{{ $compareCount }}</span> produit(s) à comparer
+        </p>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('compare.index') }}"
+               class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+                Comparer maintenant →
+            </a>
+            <a href="{{ route('compare.clear') }}"
+               class="text-gray-400 hover:text-red-500 text-sm transition">
+                Vider
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- ── Bulle WhatsApp flottante ── --}}
+@php
+    $waFloatPhone = preg_replace('/[^0-9]/', '', setting('shop_phone', ''));
+    if (strlen($waFloatPhone) === 10) { $waFloatPhone = '225' . substr($waFloatPhone, 0); }
+@endphp
+@if($waFloatPhone)
+<div x-data="{ open: false }" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+
+    {{-- Questions rapides --}}
+    <div x-show="open" x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 translate-y-2"
+         class="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-72 mb-1"
+         style="display:none">
+        <p class="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Questions rapides</p>
+        <div class="space-y-2">
+            @php
+                $questions = [
+                    ['q' => 'Est-ce disponible en boutique ?',       'icon' => '🏪'],
+                    ['q' => 'Livrez-vous dans ma ville ?',            'icon' => '🚚'],
+                    ['q' => 'Puis-je payer en plusieurs fois ?',      'icon' => '💳'],
+                    ['q' => 'Quel est le délai de livraison ?',       'icon' => '⏱️'],
+                ];
+            @endphp
+            @foreach($questions as $item)
+            <a href="https://wa.me/{{ $waFloatPhone }}?text={{ urlencode($item['q']) }}"
+               target="_blank" rel="noopener"
+               class="flex items-center gap-2 text-sm text-gray-700 hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg transition">
+                <span class="text-base">{{ $item['icon'] }}</span>
+                <span>{{ $item['q'] }}</span>
+            </a>
+            @endforeach
+            <a href="https://wa.me/{{ $waFloatPhone }}"
+               target="_blank" rel="noopener"
+               class="flex items-center justify-center gap-2 w-full mt-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 rounded-xl transition text-sm">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.017.5 3.926 1.381 5.601L0 24l6.545-1.364A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.013-1.376l-.36-.214-3.727.977.996-3.631-.235-.374A9.789 9.789 0 012.182 12C2.182 6.578 6.578 2.182 12 2.182S21.818 6.578 21.818 12 17.422 21.818 12 21.818z"/></svg>
+                Message libre
+            </a>
+        </div>
+    </div>
+
+    {{-- Bouton principal --}}
+    <button @click="open = !open"
+            class="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110 relative">
+        <svg x-show="!open" viewBox="0 0 24 24" class="w-7 h-7 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.017.5 3.926 1.381 5.601L0 24l6.545-1.364A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.013-1.376l-.36-.214-3.727.977.996-3.631-.235-.374A9.789 9.789 0 012.182 12C2.182 6.578 6.578 2.182 12 2.182S21.818 6.578 21.818 12 17.422 21.818 12 21.818z"/></svg>
+        <svg x-show="!open" x-transition viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" class="w-6 h-6 hidden" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <svg x-show="open" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" class="w-6 h-6" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+</div>
+@endif
 
 @stack('scripts')
 </body>

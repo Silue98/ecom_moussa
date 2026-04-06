@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\RegisterRequest;
 use App\Models\User;
 use App\Notifications\WelcomeUser;
+use App\Services\CartService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -32,7 +33,10 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
+        // Fusionner le panier invité avec le nouveau compte
+        app(CartService::class)->mergeGuestCart($user->id);
+
         return redirect()->route('home')
-            ->with('success', '🎉 Bienvenue ' . $user->name . ' ! Votre compte a été créé. Utilisez le code BIENVENUE10 pour -10% sur votre première commande !');
+            ->with('success', '🎉 Bienvenue ' . $user->name . ' ! Votre compte a été créé avec succès.');
     }
 }

@@ -53,7 +53,7 @@ class SendWhatsAppOrderConfirmation implements ShouldQueue
 
     private function buildMessage(Order $order): string
     {
-        $shopName    = setting('shop_name', 'Notre boutique');
+        $shopName    = setting('shop_name', 'TrustPhone CI');
         $shopPhone   = setting('shop_phone', '');
         $shopAddress = setting('shop_address', '');
         $shopHours   = setting('shop_hours', '');
@@ -63,7 +63,7 @@ class SendWhatsAppOrderConfirmation implements ShouldQueue
         foreach ($order->items as $item) {
             $name      = $item->product?->name ?? $item->product_name ?? 'Produit';
             $qty       = $item->quantity;
-            $unitPrice = number_format($item->unit_price, 0, ',', ' ');
+            $unitPrice = number_format($item->price, 0, ',', ' ');
             $itemLines .= "  • {$name} x{$qty} — {$unitPrice} FCFA\n";
         }
 
@@ -80,11 +80,6 @@ class SendWhatsAppOrderConfirmation implements ShouldQueue
         $message .= "📦 *N° de commande :* #{$order->order_number}\n\n";
         $message .= "🛍️ *Articles commandés :*\n{$itemLines}\n";
 
-        if ($order->discount_amount > 0) {
-            $discount = number_format($order->discount_amount, 0, ',', ' ');
-            $message .= "🏷️ *Réduction :* -{$discount} FCFA\n";
-        }
-
         $message .= "🚚 *Livraison :* {$shipping}\n";
         $message .= "💰 *Total :* *{$total} FCFA*\n";
         $message .= "💳 *Paiement :* {$paymentLabel}\n\n";
@@ -100,7 +95,13 @@ class SendWhatsAppOrderConfirmation implements ShouldQueue
             $message .= "  📞 {$shopPhone}\n";
         }
 
-        $message .= "\nMerci pour votre confiance ! 🙏";
+        // Lien de suivi pour clients connectés
+        if ($order->user_id) {
+            $trackingUrl = url('/compte/commandes/' . $order->id . '/suivi');
+            $message .= "\n📍 *Suivre votre commande :*\n  " . $trackingUrl;
+        }
+
+        $message .= "\n\nMerci pour votre confiance ! 🙏";
 
         return $message;
     }

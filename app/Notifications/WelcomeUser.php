@@ -24,7 +24,6 @@ class WelcomeUser extends Notification
             ->line('Votre compte a été créé avec succès.')
             ->line('Vous pouvez maintenant profiter de toutes nos offres et suivre vos commandes.')
             ->action('Commencer mes achats', url('/'))
-            ->line('Utilisez le code **BIENVENUE10** pour -10% sur votre première commande ! 🎁')
             ->salutation('L\'équipe E-Commerce');
     }
 }

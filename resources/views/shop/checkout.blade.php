@@ -5,15 +5,10 @@
 @section('content')
 @php
     $subtotal  = $cart->total;
-    $threshold = (float) (\App\Models\Setting::get('free_shipping_threshold', 30000));
-    $shipPrice = (float) (\App\Models\Setting::get('shipping_price', 2000));
+    $threshold = (float) setting('free_shipping_threshold', 30000);
+    $shipPrice = (float) setting('shipping_price', 2000);
     $shipping  = $subtotal >= $threshold ? 0 : $shipPrice;
-    $discount  = 0;
-    if (session('coupon_code')) {
-        $coupon = \App\Models\Coupon::where('code', session('coupon_code'))->first();
-        if ($coupon) $discount = $coupon->calculateDiscount($subtotal);
-    }
-    $total = $subtotal + $shipping - $discount;
+    $total     = $subtotal + $shipping;
 @endphp
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-8">💳 Finaliser ma commande</h1>
@@ -94,7 +89,7 @@
                                         @if($subtotal >= $threshold)
                                             Gratuit
                                         @else
-                                            {{ number_format($shipPrice, 0, ',', ' ') }} XOF
+                                            {{ number_format($shipPrice, 0, ',', ' ') }} FCFA
                                         @endif
                                     </span>
                                 </div>
@@ -114,7 +109,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
-                            <input type="text" name="shipping_name"
+                            <input type="text" name="shipping_name" id="shipping_name"
                                 value="{{ old('shipping_name', $user->name ?? '') }}"
                                 required
                                 class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('shipping_name') border-red-500 @enderror">
@@ -123,7 +118,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input type="email" name="shipping_email"
+                            <input type="email" name="shipping_email" id="shipping_email"
                                 value="{{ old('shipping_email', $user->email ?? '') }}"
                                 required
                                 class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('shipping_email') border-red-500 @enderror">
@@ -140,9 +135,8 @@
 
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
-                            <input type="text" name="shipping_address"
-                                value="{{ old('shipping_address', $address->address ?? '') }}"
-                                required
+                            <input type="text" name="shipping_address" id="shipping_address"
+                                value="{{ old('shipping_address', $address->address_line1 ?? '') }}"
                                 placeholder="Quartier, rue, numéro..."
                                 class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('shipping_address') border-red-500 @enderror">
                             @error('shipping_address')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
@@ -150,9 +144,8 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                            <input type="text" name="shipping_city"
+                            <input type="text" name="shipping_city" id="shipping_city"
                                 value="{{ old('shipping_city', $address->city ?? '') }}"
-                                required
                                 placeholder="Ex: Abidjan"
                                 class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('shipping_city') border-red-500 @enderror">
                             @error('shipping_city')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
@@ -217,7 +210,7 @@
                                 <div class="font-medium">{{ $item->product->name ?? 'Produit' }}</div>
                                 <div class="text-gray-500">× {{ $item->quantity }}</div>
                             </div>
-                            <span class="font-medium text-sm">{{ number_format($item->subtotal, 0, ',', ' ') }} XOF</span>
+                            <span class="font-medium text-sm">{{ number_format($item->subtotal, 0, ',', ' ') }} FCFA</span>
                         </div>
                         @endforeach
                     </div>
@@ -227,15 +220,8 @@
                     <div class="border-t pt-4 space-y-2 text-sm">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Sous-total</span>
-                            <span class="font-medium">{{ number_format($subtotal, 0, ',', ' ') }} XOF</span>
+                            <span class="font-medium">{{ number_format($subtotal, 0, ',', ' ') }} FCFA</span>
                         </div>
-                        @if($discount > 0)
-                        <div class="flex justify-between text-green-600">
-                            <span>Réduction ({{ session('coupon_code') }})</span>
-                            <span>-{{ number_format($discount, 0, ',', ' ') }} XOF</span>
-                        </div>
-                        @endif
-                        <input type="hidden" name="coupon_code" value="{{ session('coupon_code') }}">
 
                         {{-- Frais de livraison --}}
                         <div class="flex justify-between" id="shipping-line">
@@ -244,21 +230,21 @@
                                 @if($shipping == 0)
                                     <span class="text-green-600">🎉 Gratuit</span>
                                 @else
-                                    {{ number_format($shipping, 0, ',', ' ') }} XOF
+                                    {{ number_format($shipping, 0, ',', ' ') }} FCFA
                                 @endif
                             </span>
                         </div>
 
                         @if($shipping > 0)
                         <div class="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700" id="shipping-hint">
-                            💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} XOF d'achat
-                            (il vous manque {{ number_format($threshold - $subtotal, 0, ',', ' ') }} XOF)
+                            💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} FCFA d'achat
+                            (il vous manque {{ number_format($threshold - $subtotal, 0, ',', ' ') }} FCFA)
                         </div>
                         @endif
 
                         <div class="border-t pt-2 flex justify-between font-bold text-lg mt-1">
                             <span>Total à payer</span>
-                            <span class="text-blue-600" id="total-display">{{ number_format($total, 0, ',', ' ') }} XOF</span>
+                            <span class="text-blue-600" id="total-display">{{ number_format($total, 0, ',', ' ') }} FCFA</span>
                         </div>
                     </div>
 
@@ -283,7 +269,7 @@
 <script>
     const subtotal  = {{ $subtotal }};
     const shipPrice = {{ $shipPrice }};
-    const discount  = {{ $discount }};
+    const discount  = 0;
     const threshold = {{ $threshold }};
 
     const addressBlock    = document.getElementById('address-block');
@@ -293,21 +279,37 @@
     const totalDisplay    = document.getElementById('total-display');
 
     function formatNumber(n) {
-        return n.toLocaleString('fr-FR').replace(/\s/g, ' ') + ' XOF';
+        return n.toLocaleString('fr-FR').replace(/\s/g, ' ') + ' FCFA';
+    }
+
+    const addressFields = ['shipping_address', 'shipping_city'];
+
+    function setAddressRequired(required) {
+        addressFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (required) el.setAttribute('required', 'required');
+                else el.removeAttribute('required');
+            }
+        });
     }
 
     function updateDelivery(type) {
         let shipping = 0;
 
         if (type === 'pickup') {
-            // Retrait en boutique — pas de frais
-            addressTitle.textContent    = '🏪 Adresse de retrait';
+            // Retrait en boutique — adresse non obligatoire, frais nuls
+            addressTitle.textContent    = '🏪 Informations de contact';
+            addressBlock.style.opacity  = '0.6';
             shippingDisplay.innerHTML   = '<span class="text-green-600">🎉 Gratuit</span>';
             if (shippingHint) shippingHint.style.display = 'none';
+            setAddressRequired(false);
         } else {
-            // Livraison à domicile
-            addressTitle.textContent  = '📦 Adresse de livraison';
+            // Livraison à domicile — adresse obligatoire
+            addressTitle.textContent    = '📦 Adresse de livraison';
+            addressBlock.style.opacity  = '1';
             shipping = subtotal >= threshold ? 0 : shipPrice;
+            setAddressRequired(true);
 
             if (shipping === 0) {
                 shippingDisplay.innerHTML = '<span class="text-green-600">🎉 Gratuit</span>';

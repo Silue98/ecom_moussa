@@ -22,7 +22,7 @@
             <div class="bg-white/10 backdrop-blur rounded-2xl p-6 md:p-8 text-center">
                 <div class="text-5xl md:text-6xl mb-3">🎁</div>
                 <div class="text-lg md:text-2xl font-bold">Livraison gratuite</div>
-                <div class="text-blue-200 text-sm md:text-base">dès 30 000 XOF d'achat</div>
+                <div class="text-blue-200 text-sm md:text-base">dès {{ number_format((float)setting('free_shipping_threshold', 30000), 0, ',', ' ') }} FCFA d'achat</div>
             </div>
         </div>
     </div>

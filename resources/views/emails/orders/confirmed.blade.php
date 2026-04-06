@@ -71,12 +71,6 @@
           <td colspan="3" style="text-align:right; padding:8px; font-size:.85rem; color:#64748b;">Sous-total</td>
           <td style="text-align:right; padding:8px;">{{ number_format($order->subtotal, 2) }} FCFA</td>
         </tr>
-        @if($order->discount_amount > 0)
-        <tr>
-          <td colspan="3" style="text-align:right; padding:8px; font-size:.85rem; color:#16a34a;">Réduction ({{ $order->coupon_code }})</td>
-          <td style="text-align:right; padding:8px; color:#16a34a;">-{{ number_format($order->discount_amount, 2) }} FCFA</td>
-        </tr>
-        @endif
         <tr>
           <td colspan="3" style="text-align:right; padding:8px; font-size:.85rem; color:#64748b;">Livraison</td>
           <td style="text-align:right; padding:8px;">
@@ -100,8 +94,8 @@
     </p>
 
     <div style="text-align:center; margin-top:24px;">
-      <a href="{{ url('/compte/commandes/' . $order->id) }}" class="btn">
-        🔍 Suivre ma commande
+      <a href="{{ url('/compte/commandes/' . $order->id . '/suivi') }}" class="btn">
+        📍 Suivre ma commande en temps réel
       </a>
     </div>
 
@@ -111,7 +105,7 @@
   </div>
 
   <div class="footer">
-    <p>© {{ date('Y') }} E-Commerce Laravel. Tous droits réservés.</p>
+    <p>© {{ date('Y') }} TrustPhone CI Laravel. Tous droits réservés.</p>
     <p style="margin-top:6px;">Des questions ? Contactez-nous à <a href="mailto:support@ecommerce.ma" style="color:#3b82f6">support@ecommerce.ma</a></p>
   </div>
 </div>

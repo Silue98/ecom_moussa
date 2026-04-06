@@ -38,7 +38,7 @@
                         @if($item->variant)
                             <p class="text-sm text-gray-500">{{ $item->variant->name }}: {{ $item->variant->value }}</p>
                         @endif
-                        <p class="text-blue-600 font-bold mt-1">{{ number_format($item->price, 2) }} FCFA</p>
+                        <p class="text-blue-600 font-bold mt-1">{{ number_format($item->price, 0, ',', ' ') }} FCFA</p>
                     </div>
 
                     <!-- Quantity & Remove -->
@@ -57,7 +57,7 @@
                                 <button type="button" onclick="let i=this.previousElementSibling;i.value=parseInt(i.value)+1;i.form.submit()"
                                     class="px-2 py-1 hover:bg-gray-100 rounded-r-lg">+</button>
                             </form>
-                            <div class="text-right font-bold mt-1">{{ number_format($item->subtotal, 0, ',', ' ') }} XOF</div>
+                            <div class="text-right font-bold mt-1">{{ number_format($item->subtotal, 0, ',', ' ') }} FCFA</div>
                         </div>
                     </div>
                 </div>
@@ -69,50 +69,30 @@
                 <div class="bg-white rounded-xl shadow p-6 sticky top-24">
                     <h2 class="text-lg font-bold mb-4">Récapitulatif</h2>
 
-                    <!-- Coupon -->
-                    @if(session('coupon_code'))
-                        <div class="bg-green-50 border border-green-300 rounded-lg p-3 mb-4 flex items-center justify-between">
-                            <span class="text-green-700 text-sm font-medium">✅ Code: {{ session('coupon_code') }}</span>
-                            <form method="POST" action="{{ route('cart.coupon.remove') }}">
-                                @csrf @method('DELETE')
-                                <button class="text-red-500 text-sm hover:text-red-700">Supprimer</button>
-                            </form>
-                        </div>
-                    @else
-                        <form method="POST" action="{{ route('cart.coupon') }}" class="flex gap-2 mb-4">
-                            @csrf
-                            <input type="text" name="coupon_code" placeholder="Code promo"
-                                class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <button type="submit" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-700 transition">
-                                Appliquer
-                            </button>
-                        </form>
-                    @endif
-
                     <div class="space-y-3 text-sm">
                         @php
-                            $threshold = (float) \App\Models\Setting::get('free_shipping_threshold', 30000);
-                            $shipPrice = (float) \App\Models\Setting::get('shipping_price', 2000);
+                            $threshold = (float) setting('free_shipping_threshold', 30000);
+                            $shipPrice = (float) setting('shipping_price', 2000);
                             $shipping  = $cart->total >= $threshold ? 0 : $shipPrice;
                             $cartTotal = $cart->total + $shipping;
                         @endphp
                         <div class="flex justify-between">
                             <span class="text-gray-600">Sous-total</span>
-                            <span class="font-medium">{{ number_format($cart->total, 0, ',', ' ') }} XOF</span>
+                            <span class="font-medium">{{ number_format($cart->total, 0, ',', ' ') }} FCFA</span>
                         </div>
                         <div class="flex justify-between {{ $shipping == 0 ? 'text-green-600' : 'text-gray-600' }}">
                             <span>Frais de livraison</span>
-                            <span class="font-medium">{{ $shipping == 0 ? '🎉 Gratuite' : number_format($shipping, 0, ',', ' ') . ' XOF' }}</span>
+                            <span class="font-medium">{{ $shipping == 0 ? '🎉 Gratuite' : number_format($shipping, 0, ',', ' ') . ' FCFA' }}</span>
                         </div>
                         @if($cart->total < $threshold)
                         <div class="text-xs text-blue-700 bg-blue-50 border border-blue-100 p-2.5 rounded-lg">
-                            💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} XOF
-                            (il vous manque {{ number_format($threshold - $cart->total, 0, ',', ' ') }} XOF)
+                            💡 Livraison gratuite dès {{ number_format($threshold, 0, ',', ' ') }} FCFA
+                            (il vous manque {{ number_format($threshold - $cart->total, 0, ',', ' ') }} FCFA)
                         </div>
                         @endif
                         <div class="border-t pt-3 flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span class="text-blue-600">{{ number_format($cartTotal, 0, ',', ' ') }} XOF</span>
+                            <span class="text-blue-600">{{ number_format($cartTotal, 0, ',', ' ') }} FCFA</span>
                         </div>
                     </div>
 

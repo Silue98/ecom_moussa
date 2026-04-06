@@ -13,20 +13,29 @@ if (! function_exists('formatPrice')) {
 if (! function_exists('setting')) {
     /**
      * Récupère un paramètre du site depuis la table settings
+     * Utilise le cache Laravel (5 minutes) pour éviter une requête SQL à chaque appel
      */
     function setting(string $key, mixed $default = null): mixed
     {
-        static $settings = null;
-
-        if ($settings === null) {
+        $settings = \Illuminate\Support\Facades\Cache::remember('app_settings', 300, function () {
             try {
-                $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
+                return \App\Models\Setting::pluck('value', 'key')->toArray();
             } catch (\Exception $e) {
-                $settings = [];
+                return [];
             }
-        }
+        });
 
         return $settings[$key] ?? $default;
+    }
+}
+
+if (! function_exists('setting_forget')) {
+    /**
+     * Invalide le cache des settings (à appeler après une mise à jour)
+     */
+    function setting_forget(): void
+    {
+        \Illuminate\Support\Facades\Cache::forget('app_settings');
     }
 }
 

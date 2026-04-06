@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Jobs\SendOrderNotifications;
-use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\User;
 use App\Notifications\LowStockAlert;
@@ -33,33 +32,17 @@ class OrderService
             // Calculs financiers
             $subtotal       = $items->sum('subtotal');
             $discountAmount = 0;
-            $coupon         = null;
-            $couponId       = null;
-            $couponCode     = null;
-
-            if (! empty($data['coupon_code'])) {
-                $coupon = Coupon::where('code', $data['coupon_code'])->first();
-                if ($coupon && $coupon->isValid() && $subtotal >= ($coupon->min_order_amount ?? 0)) {
-                    $discountAmount = $coupon->calculateDiscount($subtotal);
-                    $couponId       = $coupon->id;
-                    $couponCode     = $coupon->code;
-                }
-            }
-
-            // TVA à 0 côté client — l'admin gère les prix TTC directement dans les produits
             $taxAmount      = 0;
             $threshold      = (float) setting('free_shipping_threshold', 30000);
             $shipPrice      = (float) setting('shipping_price', 2000);
 
-            // Si retrait en boutique → frais de livraison = 0
             if (($data['delivery_type'] ?? 'delivery') === 'pickup') {
                 $shippingAmount = 0;
             } else {
                 $shippingAmount = $subtotal >= $threshold ? 0 : $shipPrice;
             }
-            $total          = $subtotal - $discountAmount + $shippingAmount;
+            $total = $subtotal - $discountAmount + $shippingAmount;
 
-            // user_id : connecté ou invité (null)
             $userId = Auth::id();
 
             $order = Order::create([
@@ -67,13 +50,12 @@ class OrderService
                 'status'           => 'pending',
                 'payment_status'   => 'pending',
                 'payment_method'   => $data['payment_method'] ?? 'cod',
+                'delivery_type'    => $data['delivery_type'] ?? 'delivery',
                 'subtotal'         => $subtotal,
                 'tax_amount'       => $taxAmount,
                 'shipping_amount'  => $shippingAmount,
                 'discount_amount'  => $discountAmount,
                 'total'            => $total,
-                'coupon_id'        => $couponId,
-                'coupon_code'      => $couponCode,
                 'shipping_name'    => $data['shipping_name'],
                 'shipping_email'   => $data['shipping_email'],
                 'shipping_phone'   => $data['shipping_phone'] ?? null,
@@ -93,12 +75,24 @@ class OrderService
 
             // Lignes de commande + vérification stock + décrément
             foreach ($items as $item) {
-                // ── Vérification stock suffisant ──────────────────────────
-                if ($item->product->quantity < $item->quantity) {
-                    throw new \Exception(
-                        "Stock insuffisant pour « {$item->product->name} » " .
-                        "(disponible : {$item->product->quantity}, demandé : {$item->quantity})."
-                    );
+                // ── Vérification stock : variante ou produit ──────────────
+                if ($item->variant_id && $item->variant && $item->variant->quantity > 0) {
+                    // La variante a son propre stock
+                    if ($item->variant->quantity < $item->quantity) {
+                        throw new \Exception(
+                            "Stock insuffisant pour la variante « {$item->variant->value} » " .
+                            "de « {$item->product->name} » " .
+                            "(disponible : {$item->variant->quantity}, demandé : {$item->quantity})."
+                        );
+                    }
+                } else {
+                    // Stock global du produit
+                    if ($item->product->quantity < $item->quantity) {
+                        throw new \Exception(
+                            "Stock insuffisant pour « {$item->product->name} » " .
+                            "(disponible : {$item->product->quantity}, demandé : {$item->quantity})."
+                        );
+                    }
                 }
 
                 $order->items()->create([
@@ -112,18 +106,28 @@ class OrderService
                     'options'    => $item->options,
                 ]);
 
-                $item->product->decrement('quantity', $item->quantity);
+                // ── Décrément du bon stock ────────────────────────────────
+                if ($item->variant_id && $item->variant && $item->variant->quantity > 0) {
+                    // Décrémenter le stock de la variante
+                    $item->variant->decrement('quantity', $item->quantity);
 
-                // ── Alerte stock bas après décrément ──────────────────────
-                $freshProduct = $item->product->fresh();
-                if ($freshProduct && $freshProduct->isLowStock()) {
-                    User::whereIn('role', ['admin', 'manager'])
-                        ->each(fn ($admin) => $admin->notify(new LowStockAlert($freshProduct)));
+                    // Alerte stock bas sur la variante
+                    $freshVariant = $item->variant->fresh();
+                    if ($freshVariant && $freshVariant->quantity <= 3 && $freshVariant->quantity > 0) {
+                        User::whereIn('role', ['admin', 'manager'])
+                            ->each(fn ($admin) => $admin->notify(new LowStockAlert($item->product->fresh())));
+                    }
+                } else {
+                    // Décrémenter le stock global du produit
+                    $item->product->decrement('quantity', $item->quantity);
+
+                    // Alerte stock bas
+                    $freshProduct = $item->product->fresh();
+                    if ($freshProduct && $freshProduct->isLowStock()) {
+                        User::whereIn('role', ['admin', 'manager'])
+                            ->each(fn ($admin) => $admin->notify(new LowStockAlert($freshProduct)));
+                    }
                 }
-            }
-
-            if ($coupon) {
-                $coupon->increment('used_count');
             }
 
             $this->cartService->clear();
@@ -131,7 +135,7 @@ class OrderService
             return $order;
         });
 
-        // Mémoriser la commande en session pour les invités (accès à la page succès)
+        // Mémoriser la commande en session pour les invités
         if (! Auth::check()) {
             Session::put('guest_order_id', $order->id);
         }
@@ -143,13 +147,8 @@ class OrderService
         return $order;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Notifications : envoi immédiat, fallback sur queue si mail KO
-    // ─────────────────────────────────────────────────────────────────────────
-
     protected function dispatchNotifications(Order $order): void
     {
-        // ── WhatsApp : toujours dispatché EN PREMIER, indépendamment du mail ──
         try {
             \App\Jobs\SendWhatsAppOrderConfirmation::dispatch($order->id)
                 ->delay(now()->addSeconds(3));
@@ -158,7 +157,6 @@ class OrderService
             Log::warning("[OrderService] Impossible de dispatcher WhatsApp pour #{$order->order_number} : {$e->getMessage()}");
         }
 
-        // ── Mail : envoi immédiat, fallback queue si KO ───────────────────
         try {
             $this->sendNow($order);
             Log::info("[OrderService] Notifications email envoyées pour commande #{$order->order_number}.");
@@ -179,7 +177,6 @@ class OrderService
                 ->send(new \App\Mail\GuestOrderConfirmed($order));
         }
 
-        // Admins / managers
         User::whereIn('role', ['admin', 'manager'])
             ->each(fn ($admin) => $admin->notify(
                 (new NewOrderAdmin($order))->onConnection('sync')

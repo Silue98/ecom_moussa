@@ -27,9 +27,7 @@ class CheckoutController extends Controller
 
         $user       = Auth::user();
         $address    = $user?->addresses()->where('is_default', true)->first();
-        $couponCode = session('coupon_code');
-
-        return view('shop.checkout', compact('cart', 'user', 'address', 'couponCode'));
+        return view('shop.checkout', compact('cart', 'user', 'address'));
     }
 
     public function store(CheckoutRequest $request)
@@ -41,12 +39,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $order = $this->orderService->createFromCart(array_merge(
-                $request->validated(),
-                ['coupon_code' => session('coupon_code')]
-            ));
-
-            session()->forget('coupon_code');
+            $order = $this->orderService->createFromCart($request->validated());
 
             // Stocker le numéro de commande en session flash pour la page succès
             session()->flash('order_confirmed_id', $order->id);

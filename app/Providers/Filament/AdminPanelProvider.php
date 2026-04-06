@@ -4,17 +4,16 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Resources\BrandResource;
 use App\Filament\Admin\Resources\CategoryResource;
-use App\Filament\Admin\Resources\CouponResource;
 use App\Filament\Admin\Resources\OrderResource;
 use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Resources\ReviewResource;
-use App\Filament\Admin\Resources\SettingResource;
 use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Widgets\LatestOrders;
 use App\Filament\Admin\Widgets\RevenueChart;
 use App\Filament\Admin\Widgets\StatsOverview;
 use App\Filament\Admin\Widgets\TopProducts;
 use App\Filament\Admin\Pages\BoutiqueSettings;
+use App\Filament\Admin\Pages\WhatsAppSettings;
 use App\Filament\Admin\Pages\Dashboard;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -49,12 +48,12 @@ class AdminPanelProvider extends PanelProvider
                 ReviewResource::class,
                 OrderResource::class,
                 UserResource::class,
-                CouponResource::class,
-                SettingResource::class,
+                // SettingResource supprimé — tout est dans BoutiqueSettings
             ])
             ->pages([
                 Dashboard::class,
                 BoutiqueSettings::class,
+                WhatsAppSettings::class,
             ])
             ->widgets([
                 StatsOverview::class,
@@ -80,7 +79,6 @@ class AdminPanelProvider extends PanelProvider
                 'Catalogue',
                 'Ventes',
                 'Utilisateurs',
-                'Marketing',
                 'Paramètres',
             ]);
     }

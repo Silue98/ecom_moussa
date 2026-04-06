@@ -1,44 +1,51 @@
-# 🛍️ E-Commerce Laravel 12 — Projet Complet
+# 📱 TrustPhone CI — Boutique iPhone en ligne
 
 Stack: **Laravel 12 · Filament 3 · Tailwind CSS 3 · Vite · MySQL**
+
+Spécialiste iPhone en Côte d'Ivoire. iPhones neufs, débloqués tous opérateurs. Paiement à la réception.
 
 ---
 
 ## ✅ Fonctionnalités
 
 ### 🛒 Boutique Front-end
-- Page d'accueil avec produits en vedette, nouveautés, promotions
-- Catalogue produits avec filtres (catégorie, prix, promotion)
+- Page d'accueil moderne centrée iPhone (hero sombre, badges de confiance)
+- Catalogue iPhone avec filtres (gamme, prix, promotion)
 - Page produit détaillée avec galerie, variantes, avis
-- Panier d'achat (persistant, avec session pour invités + fusion à la connexion)
-- Checkout complet (livraison, paiement à la livraison, récapitulatif)
-- Codes promo / coupons
+- Panier (persistant, fusion session invité à la connexion)
+- Checkout complet — **paiement à la réception uniquement**
 - Compte client (commandes, favoris, profil, notifications)
-- Livraison gratuite dès le seuil configuré dans les Settings
+- Livraison gratuite configurable (seuil dans les Settings)
+- Retrait en boutique gratuit
+- Comparateur de produits
 - Mot de passe oublié / réinitialisation par email
 
 ### 🔐 Authentification
 - Inscription / Connexion avec rate limiting anti-bruteforce
-- Mot de passe oublié (email de réinitialisation)
 - Gestion de profil
 
 ### 🎛️ Administration Filament
 - Dashboard avec statistiques (CA, commandes, stock)
 - Graphique revenus 30 jours
-- Gestion produits (prix, stock, images, variantes, SEO)
-- Gestion catégories (hiérarchique)
+- Gestion produits iPhone (prix, stock, images, variantes, SEO)
+- Gestion catégories
 - Gestion commandes (statuts, suivi)
 - Gestion utilisateurs
-- Gestion coupons / codes promo
-- Alertes automatiques stock bas
+- Paramètres boutique (adresse, horaires, Google Maps)
+- Paramètres WhatsApp (GreenAPI)
 
 ### 📧 Email (via Resend — GRATUIT jusqu'à 3 000 emails/mois)
-- Confirmation de commande client
+- Confirmation de commande client (invités + connectés)
 - Notification nouvelle commande aux admins
 - Changement de statut de commande
-- Email de bienvenue à l'inscription
+- Email de bienvenue
 - Réinitialisation de mot de passe
 - Alerte stock bas aux admins
+
+### 📱 WhatsApp (via GreenAPI)
+- Confirmation de commande automatique par WhatsApp
+- Mise à jour de statut par WhatsApp
+- Configuration dans le panel admin
 
 ---
 
@@ -54,67 +61,62 @@ Stack: **Laravel 12 · Filament 3 · Tailwind CSS 3 · Vite · MySQL**
 ### Étapes
 
 ```bash
-# 1. Décompresser le projet
-cd ecommerce
+# 1. Extraire le projet
+cd trustphone-ci
 
-# 2. Installer les dépendances PHP
+# 2. Dépendances PHP
 composer install
 
-# 3. Installer les dépendances JS
+# 3. Dépendances JS
 npm install
 
-# 4. Configurer l'environnement
+# 4. Environnement
 cp .env.example .env
 php artisan key:generate
 
-# 5. Configurer dans .env :
-#    - DB_DATABASE, DB_USERNAME, DB_PASSWORD
-#    - MAIL_PASSWORD= votre clé API Resend (re_xxxx...)
-#    - MAIL_FROM_ADDRESS= votre email expéditeur
+# 5. Configurer .env :
+#    - DB_DATABASE=trustphone_ci
+#    - DB_USERNAME, DB_PASSWORD
+#    - MAIL_PASSWORD= votre clé Resend (re_xxxx...)
+#    - MAIL_FROM_ADDRESS= commandes@votredomaine.com
 
-# 6. Créer la base de données MySQL
-mysql -u root -p -e "CREATE DATABASE ecommerce_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# 6. Créer la base de données
+mysql -u root -p -e "CREATE DATABASE trustphone_ci CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# 7. Migrer et peupler la base de données
+# 7. Migrations + données de démo
 php artisan migrate --seed
 
-# 8. Lier le stockage public
+# 8. Lier le stockage
 php artisan storage:link
 
-# 9. Compiler les assets
+# 9. Assets (déjà compilés dans public/build/)
+# Si vous voulez recompiler :
 npm run build
 
-# 10. Démarrer le worker de queue (emails en arrière-plan)
+# 10. Queue worker (emails/WhatsApp)
 php artisan queue:work --daemon &
 
-# 11. Démarrer le serveur
+# 11. Démarrer
 php artisan serve
 ```
 
 ### Accès
 | URL | Description |
 |-----|-------------|
-| http://localhost:8000 | Boutique front-end |
+| http://localhost:8000 | Boutique TrustPhone CI |
 | http://localhost:8000/admin | Panel admin Filament |
 
 ### Comptes de test
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
-| Admin | admin@ecommerce.ci | password |
-| Client | client@ecommerce.ci | password |
-
-### Codes promo de test
-| Code | Réduction |
-|------|-----------|
-| BIENVENUE10 | 10% |
-| SOLDES20 | 20% (min. 500 XOF) |
-| LIVRAISON | Livraison gratuite |
+| Admin | admin@trustphone-ci.com | password |
+| Client | client@trustphone-ci.com | password |
 
 ---
 
 ## 📧 Configuration email (Resend — gratuit)
 
-1. Créer un compte sur [resend.com](https://resend.com) (gratuit, pas de CB)
+1. Compte sur [resend.com](https://resend.com)
 2. Ajouter et vérifier votre domaine
 3. Générer une clé API
 4. Dans `.env` :
@@ -123,47 +125,20 @@ MAIL_MAILER=smtp
 MAIL_HOST=smtp.resend.com
 MAIL_PORT=465
 MAIL_USERNAME=resend
-MAIL_PASSWORD=re_xxxxxxxxxxxx   # votre clé API
+MAIL_PASSWORD=re_xxxxxxxxxxxx
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="commandes@votredomaine.com"
+MAIL_FROM_ADDRESS="commandes@trustphone-ci.com"
 ```
 
 ---
 
-## 💳 Mode de paiement
+## 💳 Paiement
 
-Actuellement : **paiement à la livraison uniquement** (adapté au marché ivoirien).
+**Paiement à la réception uniquement** — le client paie en espèces à la livraison.
 
-Pour ajouter le Mobile Money (Wave CI, Orange Money, MTN CI) ultérieurement :
-- [CinetPay](https://cinetpay.com) — leader en Côte d'Ivoire (~1.5% de commission)
-- [Paydunya](https://paydunya.com) — alternative avec API Laravel simple
-
----
-
-## 🔧 Développement
-
-```bash
-# Assets en temps réel
-npm run dev
-
-# Queue worker (emails)
-php artisan queue:work
-
-# Vider les caches
-php artisan optimize:clear
-```
-
----
-
-## 📦 Technologies
-
-| Package | Version | Usage |
-|---------|---------|-------|
-| Laravel | ^12 | Framework PHP |
-| Filament | ^3.3 | Panel administration |
-| Tailwind CSS | ^3.4 | Styles CSS |
-| Vite | ^5.4 | Build assets |
-| MySQL | 8+ | Base de données |
+Pour ajouter le Mobile Money ultérieurement :
+- [CinetPay](https://cinetpay.com) — leader CI (~1.5%)
+- [Paydunya](https://paydunya.com) — API Laravel simple
 
 ---
 
@@ -179,6 +154,4 @@ php artisan migrate --force
 php artisan queue:work --daemon
 ```
 
----
-
-Développé avec ❤️ — Laravel 12 + Filament 3 + Tailwind CSS 3 + Vite
+**Important** : ne jamais commiter le fichier `public/hot` (créé par `npm run dev`).

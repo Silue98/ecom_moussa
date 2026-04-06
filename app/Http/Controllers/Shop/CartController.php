@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
-use App\Models\Coupon;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 
@@ -25,17 +24,24 @@ class CartController extends Controller
             'variant_id' => 'nullable|exists:product_variants,id',
         ]);
 
-        $this->cartService->addToCart(
-            $request->product_id,
-            $request->quantity ?? 1,
-            $request->variant_id,
-        );
+        try {
+            $this->cartService->addToCart(
+                $request->product_id,
+                $request->quantity ?? 1,
+                $request->variant_id,
+            );
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+            return back()->with('error', $e->getMessage());
+        }
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Produit ajouté au panier',
-                'count' => $this->cartService->getCount(),
+                'count'   => $this->cartService->getCount(),
             ]);
         }
 
@@ -63,24 +69,5 @@ class CartController extends Controller
     {
         $this->cartService->removeItem($itemId);
         return back()->with('success', 'Article supprimé du panier');
-    }
-
-    public function applyCoupon(Request $request)
-    {
-        $request->validate(['coupon_code' => 'required|string']);
-        $coupon = Coupon::where('code', strtoupper($request->coupon_code))->first();
-
-        if (!$coupon || !$coupon->isValid()) {
-            return back()->with('error', 'Code promo invalide ou expiré');
-        }
-
-        session(['coupon_code' => $coupon->code]);
-        return back()->with('success', 'Code promo appliqué !');
-    }
-
-    public function removeCoupon()
-    {
-        session()->forget('coupon_code');
-        return back()->with('success', 'Code promo supprimé');
     }
 }

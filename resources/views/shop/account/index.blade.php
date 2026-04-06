@@ -39,16 +39,16 @@
             <!-- Quick stats -->
             <div class="grid grid-cols-3 gap-4 mb-8">
                 <div class="bg-white rounded-xl shadow p-4 text-center">
-                    <div class="text-2xl font-bold text-blue-600">{{ $user->orders()->count() }}</div>
+                    <div class="text-2xl font-bold text-blue-600">{{ $ordersCount }}</div>
                     <div class="text-sm text-gray-500">Commandes</div>
                 </div>
                 <div class="bg-white rounded-xl shadow p-4 text-center">
-                    <div class="text-2xl font-bold text-orange-600">{{ $user->wishlist()->count() }}</div>
+                    <div class="text-2xl font-bold text-orange-600">{{ $wishlistCount }}</div>
                     <div class="text-sm text-gray-500">Favoris</div>
                 </div>
                 <div class="bg-white rounded-xl shadow p-4 text-center">
-                    <div class="text-2xl font-bold text-green-600">{{ number_format($user->orders()->where('payment_status', 'paid')->sum('total'), 0) }}</div>
-                    <div class="text-sm text-gray-500">XOF dépensés</div>
+                    <div class="text-2xl font-bold text-green-600">{{ number_format($totalSpent, 0, ',', ' ') }}</div>
+                    <div class="text-sm text-gray-500">FCFA dépensés</div>
                 </div>
             </div>
 

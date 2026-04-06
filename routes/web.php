@@ -8,8 +8,13 @@ use App\Http\Controllers\Shop\AccountController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\HomeController;
+use App\Http\Controllers\Shop\CompareController;
+use App\Http\Controllers\Shop\SitemapController;
 use App\Http\Controllers\Shop\ProductController;
 use Illuminate\Support\Facades\Route;
+
+// Sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Shop Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -25,13 +30,17 @@ Route::get('/notre-boutique', function () {
     return view('shop.boutique-info');
 })->name('boutique.info');
 
+// Comparateur
+Route::get('/comparer', [CompareController::class, 'index'])->name('compare.index');
+Route::post('/comparer/ajouter/{product}', [CompareController::class, 'add'])->name('compare.add');
+Route::delete('/comparer/retirer/{product}', [CompareController::class, 'remove'])->name('compare.remove');
+Route::get('/comparer/vider', [CompareController::class, 'clear'])->name('compare.clear');
+
 // Cart
 Route::get('/panier', [CartController::class, 'index'])->name('cart');
 Route::post('/panier/ajouter', [CartController::class, 'add'])->name('cart.add');
 Route::patch('/panier/{item}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/panier/{item}', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/panier/coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon');
-Route::delete('/panier/coupon/supprimer', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
 
 // Checkout
 Route::get('/commande', [CheckoutController::class, 'index'])->name('checkout');
@@ -56,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/compte', [AccountController::class, 'index'])->name('account');
     Route::get('/compte/commandes', [AccountController::class, 'orders'])->name('account.orders');
     Route::get('/compte/commandes/{order}', [AccountController::class, 'orderShow'])->name('account.order');
+    Route::get('/compte/commandes/{order}/suivi', [AccountController::class, 'orderTracking'])->name('account.order.tracking');
     Route::get('/compte/profil', [AccountController::class, 'profile'])->name('account.profile');
     Route::patch('/compte/profil', [AccountController::class, 'updateProfile'])->name('account.profile.update');
     Route::patch('/compte/mot-de-passe', [AccountController::class, 'updatePassword'])->name('account.password.update');

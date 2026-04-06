@@ -30,21 +30,17 @@
             @foreach($order->items as $item)
             <div class="row">
                 <span>{{ $item->name }} × {{ $item->quantity }}</span>
-                <span>{{ number_format($item->total, 0, ',', ' ') }} XOF</span>
+                <span>{{ number_format($item->total, 0, ',', ' ') }} FCFA</span>
             </div>
             @endforeach
 
             <div class="row">
                 <span>Livraison</span>
-                <span>{{ $order->shipping_amount > 0 ? number_format($order->shipping_amount, 0, ',', ' ') . ' XOF' : 'Gratuite' }}</span>
-            </div>
-            <div class="row">
-                <span>TVA (20%)</span>
-                <span>{{ number_format($order->tax_amount, 0, ',', ' ') }} XOF</span>
+                <span>{{ $order->shipping_amount > 0 ? number_format($order->shipping_amount, 0, ',', ' ') . ' FCFA' : 'Gratuite' }}</span>
             </div>
             <div class="row total-row">
                 <span>Total</span>
-                <span>{{ number_format($order->total, 0, ',', ' ') }} XOF</span>
+                <span>{{ number_format($order->total, 0, ',', ' ') }} FCFA</span>
             </div>
         </div>
 

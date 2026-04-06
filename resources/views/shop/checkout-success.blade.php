@@ -48,7 +48,7 @@
                     <p class="text-xs text-gray-500">Qté : {{ $item->quantity }}</p>
                 </div>
                 <span class="font-semibold text-sm text-gray-800 flex-shrink-0">
-                    {{ number_format($item->total, 0, ',', ' ') }} XOF
+                    {{ number_format($item->total, 0, ',', ' ') }} FCFA
                 </span>
             </div>
             @endforeach
@@ -58,21 +58,15 @@
         <div class="border-t pt-3 space-y-1 text-sm">
             <div class="flex justify-between text-gray-600">
                 <span>Sous-total</span>
-                <span>{{ number_format($order->subtotal, 0, ',', ' ') }} XOF</span>
+                <span>{{ number_format($order->subtotal, 0, ',', ' ') }} FCFA</span>
             </div>
-            @if($order->discount_amount > 0)
-            <div class="flex justify-between text-green-600">
-                <span>Réduction</span>
-                <span>-{{ number_format($order->discount_amount, 0, ',', ' ') }} XOF</span>
-            </div>
-            @endif
             <div class="flex justify-between text-gray-600">
                 <span>Frais de livraison</span>
-                <span>{{ $order->shipping_amount > 0 ? number_format($order->shipping_amount, 0, ',', ' ') . ' XOF' : '🎉 Gratuite' }}</span>
+                <span>{{ $order->shipping_amount > 0 ? number_format($order->shipping_amount, 0, ',', ' ') . ' FCFA' : '🎉 Gratuite' }}</span>
             </div>
             <div class="flex justify-between font-bold text-base pt-2 border-t mt-2">
                 <span>Total payé</span>
-                <span class="text-blue-600 text-lg">{{ number_format($order->total, 0, ',', ' ') }} XOF</span>
+                <span class="text-blue-600 text-lg">{{ number_format($order->total, 0, ',', ' ') }} FCFA</span>
             </div>
         </div>
     </div>

@@ -3,6 +3,57 @@
 @section('title', $product->meta_title ?? $product->name)
 @section('description', $product->meta_description ?? $product->short_description)
 
+@push('head')
+@php
+    $ogImage = $product->mainImage ? asset('storage/' . $product->mainImage->image_path) : asset('images/og-default.jpg');
+    $ogTitle = $product->meta_title ?? $product->name;
+    $ogDesc  = $product->meta_description ?? $product->short_description ?? config('app.name');
+    $ogUrl   = url()->current();
+    $jsonLd = [
+        '@context' => 'https://schema.org/',
+        '@type'    => 'Product',
+        'name'     => $product->name,
+        'description' => strip_tags($product->short_description ?? $product->name),
+        'image'    => $ogImage,
+        'sku'      => $product->sku ?? $product->id,
+        'brand'    => ['@type' => 'Brand', 'name' => $product->brand->name ?? config('app.name')],
+        'offers'   => [
+            '@type'           => 'Offer',
+            'url'             => $ogUrl,
+            'priceCurrency'   => 'XOF',
+            'price'           => $product->price,
+            'availability'    => $product->quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            'seller'          => ['@type' => 'Organization', 'name' => config('app.name')],
+        ],
+    ];
+    if ($product->reviews->count() > 0) {
+        $jsonLd['aggregateRating'] = [
+            '@type'       => 'AggregateRating',
+            'ratingValue' => $product->average_rating,
+            'reviewCount' => $product->reviews->count(),
+        ];
+    }
+@endphp
+{{-- Open Graph (WhatsApp, Facebook, Twitter) --}}
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ $ogTitle }}">
+<meta property="og:description" content="{{ $ogDesc }}">
+<meta property="og:image" content="{{ $ogImage }}">
+<meta property="og:url" content="{{ $ogUrl }}">
+<meta property="og:site_name" content="{{ config('app.name') }}">
+<meta property="product:price:amount" content="{{ $product->price }}">
+<meta property="product:price:currency" content="XOF">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $ogTitle }}">
+<meta name="twitter:description" content="{{ $ogDesc }}">
+<meta name="twitter:image" content="{{ $ogImage }}">
+
+{{-- JSON-LD Structured Data (Google Shopping) --}}
+<script type="application/ld+json">
+{!! json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endpush
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-8">
 
@@ -32,24 +83,24 @@
     @endif
 
     <div class="bg-white rounded-2xl shadow p-6 lg:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
             {{-- Images --}}
-            <div>
-                <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
+            <div class="sticky top-24">
+                <div class="bg-gray-100 rounded-xl overflow-hidden mb-3 flex items-center justify-center min-h-[300px]">
                     @if($product->images->count())
                         <img id="main-image"
                             src="{{ asset('storage/' . $product->images->first()->image_path) }}"
                             alt="{{ $product->name }}"
-                            class="w-full h-full object-cover">
+                            class="w-full object-contain max-h-[480px]">
                     @else
-                        <div class="w-full h-full flex items-center justify-center">
+                        <div class="flex items-center justify-center h-64">
                             <span class="text-8xl">📦</span>
                         </div>
                     @endif
                 </div>
                 @if($product->images->count() > 1)
-                <div class="flex gap-2 overflow-x-auto">
+                <div class="flex gap-2 overflow-x-auto pb-2">
                     @foreach($product->images as $image)
                     <button onclick="document.getElementById('main-image').src='{{ asset('storage/' . $image->image_path) }}'"
                         class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition">
@@ -86,19 +137,38 @@
 
                 {{-- Prix --}}
                 <div class="flex items-center gap-4 mb-6">
-                    <span class="text-3xl font-bold text-blue-600">{{ number_format($product->price, 0, ',', ' ') }} XOF</span>
+                    <span class="text-3xl font-bold text-blue-600" id="price-display" data-base-price="{{ $product->price }}">{{ number_format($product->price, 0, ',', ' ') }} FCFA</span>
                     @if($product->compare_price)
-                        <span class="text-xl text-gray-400 line-through">{{ number_format($product->compare_price, 0, ',', ' ') }} XOF</span>
+                        <span class="text-xl text-gray-400 line-through">{{ number_format($product->compare_price, 0, ',', ' ') }} FCFA</span>
                         <span class="bg-red-100 text-red-600 text-sm font-bold px-2 py-1 rounded">-{{ $product->discount_percent }}%</span>
                     @endif
                 </div>
 
-                {{-- Stock --}}
+                {{-- Stock urgence visuelle --}}
                 <div class="mb-6">
-                    @if($product->quantity > 0)
-                        <span class="text-green-600 font-medium">✅ En stock ({{ $product->quantity }} disponibles)</span>
+                    @if($product->quantity <= 0)
+                        <div class="flex items-center gap-2 text-red-600 font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block"></span>
+                            Rupture de stock
+                        </div>
+                    @elseif($product->quantity <= $product->low_stock_threshold)
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse inline-block"></span>
+                                <span class="text-orange-600 font-semibold text-sm">
+                                    Plus que {{ $product->quantity }} en stock !
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                <div class="bg-orange-500 h-1.5 rounded-full transition-all" style="width: {{ min(100, ($product->quantity / max(1, $product->low_stock_threshold * 2)) * 100) }}%"></div>
+                            </div>
+                            <p class="text-xs text-orange-500">⚡ Commandez maintenant avant rupture</p>
+                        </div>
                     @else
-                        <span class="text-red-600 font-medium">❌ Rupture de stock</span>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                            <span class="text-green-600 font-medium text-sm">En stock — Expédié sous 24h</span>
+                        </div>
                     @endif
                 </div>
 
@@ -111,10 +181,13 @@
                         <div class="flex flex-wrap gap-2">
                             @foreach($variantValues as $variant)
                             <label class="cursor-pointer">
-                                <input type="radio" name="variant_{{ Str::slug($variantName) }}" value="{{ $variant->id }}" class="sr-only peer">
+                                <input type="radio" name="variant_{{ Str::slug($variantName) }}"
+                                    value="{{ $variant->id }}"
+                                    data-price="{{ $product->price + $variant->price_modifier }}"
+                                    class="sr-only peer variant-radio">
                                 <span class="border-2 border-gray-300 peer-checked:border-blue-600 peer-checked:bg-blue-50 px-3 py-1 rounded-lg text-sm hover:border-blue-400 transition">
                                     {{ $variant->value }}
-                                    @if($variant->price_modifier > 0) (+{{ number_format($variant->price_modifier, 0, ',', ' ') }} XOF) @endif
+                                    @if($variant->price_modifier > 0) <span class="text-blue-600 text-xs">(+{{ number_format($variant->price_modifier, 0, ',', ' ') }} FCFA)</span> @endif
                                 </span>
                             </label>
                             @endforeach
@@ -125,9 +198,10 @@
                 @endif
 
                 {{-- Ajouter au panier --}}
-                <form method="POST" action="{{ route('cart.add') }}" class="flex gap-3 mb-4">
+                <form method="POST" action="{{ route('cart.add') }}" class="flex gap-3 mb-4" id="add-to-cart-form">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <input type="hidden" name="variant_id" id="selected-variant-id" value="">
                     <div class="flex items-center border rounded-lg">
                         <button type="button" onclick="this.nextElementSibling.value = Math.max(1, parseInt(this.nextElementSibling.value) - 1)"
                             class="px-3 py-2 hover:bg-gray-100 transition rounded-l-lg">−</button>
@@ -142,15 +216,48 @@
                     </button>
                 </form>
 
+                {{-- Bouton Commander via WhatsApp --}}
+                @php
+                    $waPhone = preg_replace('/[^0-9]/', '', setting('shop_phone', ''));
+                    if (strlen($waPhone) === 10) { $waPhone = '225' . substr($waPhone, 2); }
+                    $waMsg = urlencode(
+                        "Bonjour ! Je souhaite commander :\n\n" .
+                        "📱 *" . $product->name . "*\n" .
+                        "💰 Prix : " . number_format($product->price, 0, ',', ' ') . " FCFA\n" .
+                        ($product->quantity > 0 ? "✅ En stock\n" : "⚠️ Vérifier disponibilité\n") .
+                        "🔗 " . url()->current() . "\n\n" .
+                        "Merci de confirmer ma commande."
+                    );
+                @endphp
+                @if($waPhone)
+                <a href="https://wa.me/{{ $waPhone }}?text={{ $waMsg }}"
+                   target="_blank" rel="noopener"
+                   class="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition mb-3 text-sm">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5 fill-white flex-shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.017.5 3.926 1.381 5.601L0 24l6.545-1.364A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.013-1.376l-.36-.214-3.727.977.996-3.631-.235-.374A9.789 9.789 0 012.182 12C2.182 6.578 6.578 2.182 12 2.182S21.818 6.578 21.818 12 17.422 21.818 12 21.818z"/></svg>
+                    Commander via WhatsApp
+                </a>
+                @endif
+
                 {{-- Wishlist --}}
-                @auth
-                <form method="POST" action="{{ route('wishlist.toggle', $product->id) }}">
+                @if(Auth::check())
+                <form method="POST" action="{{ route('wishlist.toggle', $product) }}">
                     @csrf
                     <button type="submit" class="w-full border border-gray-300 py-2 rounded-lg hover:bg-red-50 hover:border-red-400 transition text-sm text-gray-600">
                         ❤️ Ajouter aux favoris
                     </button>
                 </form>
-                @endauth
+                @endif
+
+                {{-- Ajouter au comparateur --}}
+                <form method="POST" action="{{ route('compare.add', $product) }}" class="mb-3">
+                    @csrf
+                    @php $inCompare = in_array($product->id, session('compare', [])); @endphp
+                    <button type="submit"
+                        class="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 transition text-sm text-gray-600 {{ $inCompare ? 'bg-blue-50 border-blue-400 text-blue-600' : '' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        {{ $inCompare ? '✓ Dans le comparateur' : 'Comparer ce produit' }}
+                    </button>
+                </form>
 
                 {{-- ── Encarts boutique & crédit ── --}}
                 @php
@@ -170,17 +277,7 @@
                 </a>
                 @endif
 
-                @if($showCredit)
-                <a href="{{ route('credit.info') }}"
-                   class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 hover:bg-amber-100 transition">
-                    <span class="text-xl">💳</span>
-                    <div>
-                        <p class="text-sm font-semibold text-amber-800">Achat à crédit disponible</p>
-                        <p class="text-xs text-amber-600">Repartez aujourd'hui · Payez en plusieurs fois</p>
-                    </div>
-                    <span class="ml-auto text-amber-500 text-sm">→</span>
-                </a>
-                @endif
+                @include('shop.products.credit-block')
 
                 {{-- Infos --}}
                 <div class="border-t mt-4 pt-4 space-y-2 text-sm text-gray-600">
@@ -215,21 +312,8 @@
             {{-- Avis --}}
             <div id="content-reviews" class="hidden">
 
-                @php
-                    $userReview = auth()->check()
-                        ? $product->reviews->where('user_id', auth()->id())->first()
-                        : null;
-
-                    $isVerifiedPurchase = auth()->check()
-                        ? \App\Models\Order::where('user_id', auth()->id())
-                            ->where('status', 'delivered')
-                            ->whereHas('items', fn($q) => $q->where('product_id', $product->id))
-                            ->exists()
-                        : false;
-                @endphp
-
                 {{-- ── Formulaire laisser un avis ──────────────────────── --}}
-                @auth
+                @if(Auth::check())
                     @if(! $userReview)
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
                         <h3 class="text-lg font-bold mb-1">✍️ Laisser un avis</h3>
@@ -309,8 +393,10 @@
                         </form>
                     </div>
                     @endif
-                @else
-                {{-- Non connecté --}}
+                @endif
+
+                {{-- ✅ CORRECTION : @if(!Auth::check()) remplace l'ancien @else/@endif --}}
+                @if(!Auth::check())
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8 text-center">
                     <p class="text-gray-600 mb-3">Connectez-vous pour laisser un avis</p>
                     <a href="{{ route('login') }}"
@@ -318,7 +404,7 @@
                         Se connecter
                     </a>
                 </div>
-                @endauth
+                @endif
 
                 {{-- ── Liste des avis approuvés ────────────────────────── --}}
                 @php $approvedReviews = $product->reviews->where('is_approved', true); @endphp
@@ -384,6 +470,36 @@
 
 @push('scripts')
 <script>
+// Gestion des variantes — prix dynamique + variant_id
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('add-to-cart-form');
+    const variantInput = document.getElementById('selected-variant-id');
+    const priceDisplay = document.getElementById('price-display');
+    const variantRadios = document.querySelectorAll('.variant-radio');
+
+    variantRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            variantInput.value = this.value;
+
+            // Mettre à jour le prix affiché
+            if (priceDisplay && this.dataset.price) {
+                const price = parseFloat(this.dataset.price);
+                priceDisplay.textContent = new Intl.NumberFormat('fr-FR').format(Math.round(price)) + ' FCFA';
+            }
+        });
+    });
+
+    // Validation avant soumission
+    if (form && variantRadios.length > 0) {
+        form.addEventListener('submit', function (e) {
+            if (!variantInput.value) {
+                e.preventDefault();
+                alert('Veuillez choisir une option avant d\'ajouter au panier.');
+            }
+        });
+    }
+});
+
 // Onglets
 function showTab(tab) {
     ['description', 'reviews'].forEach(t => {

@@ -28,7 +28,7 @@ class CouponResource extends Resource
                     ->hint('Majuscules recommandées'),
                 Forms\Components\Select::make('type')
                     ->label('Type')
-                    ->options(['percentage' => 'Pourcentage (%)', 'fixed' => 'Montant fixe (XOF)'])
+                    ->options(['percentage' => 'Pourcentage (%)', 'fixed' => 'Montant fixe (FCFA)'])
                     ->required(),
                 Forms\Components\TextInput::make('value')
                     ->label('Valeur')

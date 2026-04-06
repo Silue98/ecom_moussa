@@ -94,6 +94,12 @@ class OrderResource extends Resource
                             'pending' => '⏳ En attente', 'paid' => '✅ Payé',
                             'failed' => '❌ Échoué', 'refunded' => '↩️ Remboursé', default => $state,
                         }),
+                    Infolists\Components\TextEntry::make('delivery_type')->label('Mode de livraison')
+                        ->formatStateUsing(fn ($state) => match($state) {
+                            'pickup'   => '🏪 Retrait en boutique',
+                            'delivery' => '🚚 Livraison à domicile',
+                            default    => ucfirst($state ?? '-'),
+                        })->badge()->color(fn ($state) => $state === 'pickup' ? 'warning' : 'info'),
                     Infolists\Components\TextEntry::make('payment_method')->label('Mode paiement')
                         ->formatStateUsing(fn ($state) => match($state) {
                             'cod' => '💵 Livraison', 'card' => '💳 Carte', 'bank_transfer' => '🏦 Virement', default => $state,
@@ -107,7 +113,6 @@ class OrderResource extends Resource
                     Infolists\Components\TextEntry::make('total')->label('TOTAL')->money('FCFA')->weight('bold')->size('lg'),
                 ]),
                 Infolists\Components\Grid::make(3)->schema([
-                    Infolists\Components\TextEntry::make('coupon_code')->label('Code promo')->placeholder('Aucun'),
                     Infolists\Components\TextEntry::make('tracking_number')->label('N° Suivi')->placeholder('Non défini')->copyable(),
                     Infolists\Components\TextEntry::make('created_at')->label('Passée le')->dateTime('d/m/Y à H:i'),
                 ]),

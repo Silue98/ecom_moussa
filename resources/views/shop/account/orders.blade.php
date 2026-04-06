@@ -40,9 +40,12 @@
                     <div class="text-right">
                         <div class="text-2xl font-bold text-blue-600">{{ number_format($order->total, 2) }} FCFA</div>
                         <div class="text-sm text-gray-500">{{ $order->items->count() }} article(s)</div>
-                        <a href="{{ route('account.order', $order) }}" class="mt-2 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
-                            Voir détails →
-                        </a>
+                        <div class="flex gap-2 mt-2">
+                            <a href="{{ route('account.order', $order) }}" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 transition">Détails</a>
+                            @if(!in_array($order->status, ['cancelled', 'refunded']))
+                            <a href="{{ route('account.order.tracking', $order) }}" class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-200 transition">📍 Suivi</a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

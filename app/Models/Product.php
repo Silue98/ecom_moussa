@@ -16,7 +16,7 @@ class Product extends Model
         'sku', 'barcode', 'quantity', 'low_stock_threshold',
         'weight', 'length', 'width', 'height',
         'category_id', 'brand_id', 'is_active', 'is_featured',
-        'is_new', 'on_sale', 'meta_title', 'meta_description', 'tags', 'sort_order'
+        'is_new', 'on_sale', 'meta_title', 'meta_description', 'tags', 'specifications', 'sort_order'
     ];
 
     protected $casts = [
@@ -28,6 +28,7 @@ class Product extends Model
         'is_new' => 'boolean',
         'on_sale' => 'boolean',
         'tags' => 'array',
+        'specifications' => 'array',
     ];
 
     public function category()
@@ -58,6 +59,12 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class)->where('is_approved', true);
+    }
+
+    // Tous les avis (approuvés + en attente) — utilisé pour la vérification doublon
+    public function allReviews()
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function orderItems()

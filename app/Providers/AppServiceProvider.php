@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Setting;
 use App\Services\CartService;
 use Carbon\Carbon;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +25,9 @@ class AppServiceProvider extends ServiceProvider
         app()->setLocale('fr');
         Carbon::setLocale('fr');
         setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'fr');
+
+        // Invalider le cache des settings automatiquement à chaque modification
+        Setting::saved(fn () => Cache::forget('app_settings'));
+        Setting::deleted(fn () => Cache::forget('app_settings'));
     }
 }

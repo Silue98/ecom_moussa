@@ -13,15 +13,18 @@ class CheckoutRequest extends FormRequest
 
     public function rules(): array
     {
+        $isPickup = $this->input('delivery_type') === 'pickup';
+
         return [
             'shipping_name'    => ['required', 'string', 'max:100'],
             'shipping_email'   => ['required', 'email', 'max:150'],
-            'shipping_phone'   => ['nullable', 'string', 'max:20'],   // optionnel
-            'shipping_address' => ['required', 'string', 'max:255'],
-            'shipping_city'    => ['required', 'string', 'max:100'],
-            'shipping_zip'     => ['nullable', 'string', 'max:10'],   // optionnel (pas toujours dispo en CI)
+            'shipping_phone'   => ['nullable', 'string', 'max:20'],
+            // Adresse obligatoire uniquement pour la livraison à domicile
+            'shipping_address' => [$isPickup ? 'nullable' : 'required', 'string', 'max:255'],
+            'shipping_city'    => [$isPickup ? 'nullable' : 'required', 'string', 'max:100'],
+            'shipping_zip'     => ['nullable', 'string', 'max:10'],
             'shipping_state'   => ['nullable', 'string', 'max:100'],
-            'shipping_country' => ['nullable', 'string', 'max:100'],  // géré côté serveur si absent
+            'shipping_country' => ['nullable', 'string', 'max:100'],
             'payment_method'   => ['required', 'in:cod'],
             'notes'            => ['nullable', 'string', 'max:500'],
             'delivery_type'    => ['required', 'in:pickup,delivery'],

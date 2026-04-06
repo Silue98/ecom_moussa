@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 420" width="500" height="420">
+
+  <!-- Fond transparent -->
+
+  <!-- ── Téléphone ── -->
+  <rect x="168" y="40" width="114" height="190" rx="22" fill="#1d4ed8"/>
+  <rect x="182" y="58" width="86" height="148" rx="10" fill="#93c5fd"/>
+  <!-- Bouton home BLANC -->
+  <circle cx="225" cy="218" r="11" fill="#ffffff"/>
+  <!-- Encoche caméra -->
+  <rect x="208" y="50" width="34" height="8" rx="4" fill="#1e40af"/>
+
+  <!-- ── Ondes signal ── -->
+  <path d="M292 90 Q315 125 292 160" fill="none" stroke="#1d4ed8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M308 74 Q342 125 308 176" fill="none" stroke="#3b82f6" stroke-width="7" stroke-linecap="round"/>
+  <path d="M324 58 Q370 125 324 192" fill="none" stroke="#93c5fd" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- ── Texte TrustPhoneci ── -->
+  <text x="250" y="308" font-family="Arial Black, sans-serif" font-weight="900" font-size="72px" fill="#1a1a1a" text-anchor="middle" letter-spacing="-2">TrustPhone<tspan font-size="36px" fill="#1d4ed8" dy="10">ci</tspan></text>
+
+  <!-- Ligne décorative bleue -->
+  <rect x="52" y="328" width="396" height="6" rx="3" fill="#1d4ed8"/>
+
+</svg>

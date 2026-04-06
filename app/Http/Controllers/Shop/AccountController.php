@@ -18,9 +18,12 @@ class AccountController extends Controller
 
     public function index()
     {
-        $user = Auth::user();
-        $orders = $user->orders()->latest()->take(5)->get();
-        return view('shop.account.index', compact('user', 'orders'));
+        $user         = Auth::user();
+        $orders       = $user->orders()->latest()->take(5)->get();
+        $ordersCount  = $user->orders()->count();
+        $wishlistCount= $user->wishlist()->count();
+        $totalSpent   = $user->orders()->where('payment_status', 'paid')->sum('total');
+        return view('shop.account.index', compact('user', 'orders', 'ordersCount', 'wishlistCount', 'totalSpent'));
     }
 
     public function orders()
@@ -34,6 +37,12 @@ class AccountController extends Controller
         if ($order->user_id !== Auth::id()) abort(403);
         $order->load('items.product.mainImage');
         return view('shop.account.order-show', compact('order'));
+    }
+
+    public function orderTracking(\App\Models\Order $order)
+    {
+        if ($order->user_id !== Auth::id()) abort(403);
+        return view('shop.account.order-tracking', compact('order'));
     }
 
     public function profile()

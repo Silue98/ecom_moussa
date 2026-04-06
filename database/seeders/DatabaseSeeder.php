@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Setting;
@@ -17,124 +16,123 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin user
+        // ── Utilisateurs ─────────────────────────────────────────────
         User::create([
-            'name' => 'Administrateur',
-            'email' => 'admin@ecommerce.ci',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
+            'name'      => 'Administrateur TrustPhone',
+            'email'     => 'admin@trustphone-ci.com',
+            'password'  => Hash::make('password'),
+            'role'      => 'admin',
             'is_active' => true,
         ]);
 
-        // Test customer
         User::create([
-            'name' => 'Client Test',
-            'email' => 'client@ecommerce.ci',
-            'password' => Hash::make('password'),
-            'role' => 'customer',
+            'name'      => 'Client Test',
+            'email'     => 'client@trustphone-ci.com',
+            'password'  => Hash::make('password'),
+            'role'      => 'customer',
             'is_active' => true,
         ]);
 
-        // Settings
+        // ── Paramètres généraux ───────────────────────────────────────
         $settings = [
-            ['key' => 'site_name', 'value' => 'E-Commerce Laravel', 'group' => 'general'],
-            ['key' => 'site_email', 'value' => 'contact@ecommerce.ci', 'group' => 'general'],
-            ['key' => 'currency', 'value' => 'XOF', 'group' => 'shop'],
-            ['key' => 'free_shipping_threshold', 'value' => '30000', 'group' => 'shop'],
-            ['key' => 'shipping_price', 'value' => '30', 'group' => 'shop'],
-            ['key' => 'tax_rate', 'value' => '20', 'group' => 'shop'],
+            // Général
+            ['key' => 'site_name',               'value' => 'TrustPhone CI',                   'group' => 'general'],
+            ['key' => 'site_email',              'value' => 'contact@trustphone-ci.com',        'group' => 'general'],
+            ['key' => 'currency',                'value' => 'FCFA',                             'group' => 'shop'],
+            ['key' => 'free_shipping_threshold', 'value' => '50000',                            'group' => 'shop'],
+            ['key' => 'shipping_price',          'value' => '2000',                             'group' => 'shop'],
+            ['key' => 'tax_rate',                'value' => '0',                                'group' => 'shop'],
+            // Boutique
+            ['key' => 'shop_name',               'value' => 'TrustPhone CI',                   'group' => 'boutique'],
+            ['key' => 'shop_address',            'value' => 'Votre adresse, Abidjan',          'group' => 'boutique'],
+            ['key' => 'shop_city',               'value' => "Abidjan, Côte d'Ivoire",          'group' => 'boutique'],
+            ['key' => 'shop_phone',              'value' => '+225 07 00 00 00 00',             'group' => 'boutique'],
+            ['key' => 'shop_hours',              'value' => 'Lun – Sam : 8h00 – 19h00',       'group' => 'boutique'],
+            ['key' => 'shop_gmaps_url',          'value' => 'https://maps.google.com',         'group' => 'boutique'],
+            ['key' => 'pickup_enabled',          'value' => '1',                               'group' => 'boutique'],
+            ['key' => 'pickup_message',          'value' => 'Venez récupérer votre iPhone directement en boutique, sans frais supplémentaires. Nous vérifions chaque appareil avant remise.', 'group' => 'boutique'],
+            ['key' => 'credit_enabled',          'value' => '1',                               'group' => 'boutique'],
+            ['key' => 'credit_message',          'value' => '',                                'group' => 'boutique'],
+            ['key' => 'credit_conditions',       'value' => '',                                'group' => 'boutique'],
+            // Règles échéancier crédit
+            ['key' => 'credit_nb_echeances',    'value' => '3',           'group' => 'credit'],
+            ['key' => 'credit_pourcentages',     'value' => '30,40,30',    'group' => 'credit'],
+            ['key' => 'credit_taux_interet',     'value' => '0',           'group' => 'credit'],
+            ['key' => 'credit_montant_min',      'value' => '100000',      'group' => 'credit'],
+            ['key' => 'credit_documents',        'value' => "Carte Nationale d'Identité (CNI) valide
+Une photo d'identité récente
+Justificatif de domicile (facture CIE/SODECI)
+Justificatif de revenus ou contrat de travail", 'group' => 'credit'],
         ];
-        foreach ($settings as $s) Setting::create($s);
+        foreach ($settings as $s) {
+            Setting::firstOrCreate(['key' => $s['key']], $s);
+        }
 
-        // Brands
-        $brands = [
-            ['name' => 'Apple', 'slug' => 'apple', 'is_active' => true],
-            ['name' => 'Samsung', 'slug' => 'samsung', 'is_active' => true],
-            ['name' => 'Sony', 'slug' => 'sony', 'is_active' => true],
-            ['name' => 'Nike', 'slug' => 'nike', 'is_active' => true],
-            ['name' => 'Adidas', 'slug' => 'adidas', 'is_active' => true],
+        // ── Marque Apple uniquement ───────────────────────────────────
+        $apple = Brand::create([
+            'name'      => 'Apple',
+            'slug'      => 'apple',
+            'is_active' => true,
+        ]);
+
+        // ── Catégories iPhone ─────────────────────────────────────────
+        $cats = [
+            ['name' => 'iPhone 16 Series',  'slug' => 'iphone-16-series',  'sort_order' => 1],
+            ['name' => 'iPhone 15 Series',  'slug' => 'iphone-15-series',  'sort_order' => 2],
+            ['name' => 'iPhone 14 Series',  'slug' => 'iphone-14-series',  'sort_order' => 3],
+            ['name' => 'iPhone 13 Series',  'slug' => 'iphone-13-series',  'sort_order' => 4],
+            ['name' => 'Accessoires Apple', 'slug' => 'accessoires-apple', 'sort_order' => 5],
         ];
-        foreach ($brands as $b) Brand::create($b);
+        $catMap = [];
+        foreach ($cats as $c) {
+            $catMap[$c['slug']] = Category::create(array_merge($c, ['is_active' => true]));
+        }
 
-        // Categories
-        $categories = [
-            ['name' => 'Électronique', 'slug' => 'electronique', 'is_active' => true, 'sort_order' => 1],
-            ['name' => 'Smartphones', 'slug' => 'smartphones', 'is_active' => true, 'sort_order' => 2],
-            ['name' => 'Ordinateurs', 'slug' => 'ordinateurs', 'is_active' => true, 'sort_order' => 3],
-            ['name' => 'Audio & Son', 'slug' => 'audio', 'is_active' => true, 'sort_order' => 4],
-            ['name' => 'Mode Homme', 'slug' => 'mode-homme', 'is_active' => true, 'sort_order' => 5],
-            ['name' => 'Mode Femme', 'slug' => 'mode-femme', 'is_active' => true, 'sort_order' => 6],
-            ['name' => 'Maison & Jardin', 'slug' => 'maison-jardin', 'is_active' => true, 'sort_order' => 7],
-            ['name' => 'Sport & Fitness', 'slug' => 'sport', 'is_active' => true, 'sort_order' => 8],
-        ];
-        foreach ($categories as $c) Category::create($c);
-
-        // Products
+        // ── Produits iPhone ───────────────────────────────────────────
         $products = [
-            ['name' => 'iPhone 15 Pro', 'slug' => 'iphone-15-pro', 'price' => 12999, 'compare_price' => 14999, 'quantity' => 50, 'category_id' => 2, 'brand_id' => 1, 'is_featured' => true, 'is_new' => true, 'short_description' => 'Le dernier iPhone avec puce A17 Pro'],
-            ['name' => 'Samsung Galaxy S24', 'slug' => 'samsung-galaxy-s24', 'price' => 9999, 'compare_price' => 11000, 'quantity' => 30, 'category_id' => 2, 'brand_id' => 2, 'is_featured' => true, 'on_sale' => true, 'short_description' => 'Galaxy IA de nouvelle génération'],
-            ['name' => 'MacBook Air M3', 'slug' => 'macbook-air-m3', 'price' => 15999, 'quantity' => 20, 'category_id' => 3, 'brand_id' => 1, 'is_featured' => true, 'is_new' => true, 'short_description' => 'Ultra-fin, ultra-rapide'],
-            ['name' => 'Sony WH-1000XM5', 'slug' => 'sony-wh-1000xm5', 'price' => 3999, 'compare_price' => 4999, 'quantity' => 100, 'category_id' => 4, 'brand_id' => 3, 'on_sale' => true, 'is_featured' => true, 'short_description' => 'Casque à réduction de bruit leader du marché'],
-            ['name' => 'Nike Air Max 270', 'slug' => 'nike-air-max-270', 'price' => 1299, 'compare_price' => 1499, 'quantity' => 200, 'category_id' => 5, 'brand_id' => 4, 'on_sale' => true, 'short_description' => 'Confort et style au quotidien'],
-            ['name' => 'Adidas Ultraboost 23', 'slug' => 'adidas-ultraboost-23', 'price' => 1599, 'quantity' => 150, 'category_id' => 8, 'brand_id' => 5, 'is_new' => true, 'short_description' => 'La chaussure de running la plus confortable'],
-            ['name' => 'Samsung 4K Smart TV 55"', 'slug' => 'samsung-tv-55', 'price' => 5999, 'compare_price' => 7999, 'quantity' => 25, 'category_id' => 1, 'brand_id' => 2, 'on_sale' => true, 'is_featured' => true, 'short_description' => 'Smart TV 4K QLED avec IA'],
-            ['name' => 'iPad Pro 12.9"', 'slug' => 'ipad-pro-129', 'price' => 11999, 'quantity' => 40, 'category_id' => 1, 'brand_id' => 1, 'is_new' => true, 'short_description' => 'La tablette la plus puissante'],
+            // iPhone 16 Series
+            ['name' => 'iPhone 16 Pro Max 256 Go',    'slug' => 'iphone-16-pro-max-256',   'price' => 1350000, 'compare_price' => 1500000, 'qty' => 15, 'cat' => 'iphone-16-series', 'featured' => true,  'new' => true,  'sale' => true,  'desc' => 'Le plus grand écran ProMotion 6,9". Puce A18 Pro. Titane naturel. Caméra 48 MP Fusion.'],
+            ['name' => 'iPhone 16 Pro 128 Go',        'slug' => 'iphone-16-pro-128',       'price' => 1150000, 'compare_price' => null,    'qty' => 20, 'cat' => 'iphone-16-series', 'featured' => true,  'new' => true,  'sale' => false, 'desc' => 'Écran Super Retina XDR 6,3". Puce A18 Pro. Photo/vidéo professionnels.'],
+            ['name' => 'iPhone 16 256 Go',            'slug' => 'iphone-16-256',           'price' => 950000,  'compare_price' => null,    'qty' => 25, 'cat' => 'iphone-16-series', 'featured' => true,  'new' => true,  'sale' => false, 'desc' => 'Puce A18, bouton Action et bouton Appareil photo. Tout nouveau design.'],
+            ['name' => 'iPhone 16 128 Go',            'slug' => 'iphone-16-128',           'price' => 850000,  'compare_price' => null,    'qty' => 30, 'cat' => 'iphone-16-series', 'featured' => false, 'new' => true,  'sale' => false, 'desc' => 'La puissance d\'A18 dans un format compact. Apple Intelligence intégré.'],
+            // iPhone 15 Series
+            ['name' => 'iPhone 15 Pro Max 256 Go',    'slug' => 'iphone-15-pro-max-256',   'price' => 1100000, 'compare_price' => 1280000, 'qty' => 18, 'cat' => 'iphone-15-series', 'featured' => true,  'new' => false, 'sale' => true,  'desc' => 'Titane. Caméra 5× zoom optique. Puce A17 Pro. Écran Always-On 6,7".'],
+            ['name' => 'iPhone 15 Pro 128 Go',        'slug' => 'iphone-15-pro-128',       'price' => 950000,  'compare_price' => 1100000, 'qty' => 22, 'cat' => 'iphone-15-series', 'featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Châssis titane ultraléger. Puce A17 Pro. Bouton Action personnalisable.'],
+            ['name' => 'iPhone 15 256 Go',            'slug' => 'iphone-15-256',           'price' => 780000,  'compare_price' => 900000,  'qty' => 35, 'cat' => 'iphone-15-series', 'featured' => true,  'new' => false, 'sale' => true,  'desc' => 'Dynamic Island. Charge USB-C. Caméra principale 48 MP.'],
+            ['name' => 'iPhone 15 128 Go',            'slug' => 'iphone-15-128',           'price' => 680000,  'compare_price' => 780000,  'qty' => 40, 'cat' => 'iphone-15-series', 'featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Dynamic Island et USB-C pour la première fois sur iPhone standard.'],
+            // iPhone 14 Series
+            ['name' => 'iPhone 14 Pro Max 256 Go',    'slug' => 'iphone-14-pro-max-256',   'price' => 850000,  'compare_price' => 980000,  'qty' => 10, 'cat' => 'iphone-14-series', 'featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Dynamic Island. Caméra 48 MP. Always-On Display. Puce A16 Bionic.'],
+            ['name' => 'iPhone 14 128 Go',            'slug' => 'iphone-14-128',           'price' => 580000,  'compare_price' => 680000,  'qty' => 20, 'cat' => 'iphone-14-series', 'featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Crash Detection. Mode Action vidéo. Connectivité satellite d\'urgence.'],
+            // iPhone 13 Series
+            ['name' => 'iPhone 13 128 Go',            'slug' => 'iphone-13-128',           'price' => 420000,  'compare_price' => 500000,  'qty' => 30, 'cat' => 'iphone-13-series', 'featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Puce A15 Bionic. Mode cinématique. Écran Super Retina XDR. Excellent rapport qualité/prix.'],
+            ['name' => 'iPhone 13 Mini 128 Go',       'slug' => 'iphone-13-mini-128',      'price' => 380000,  'compare_price' => 450000,  'qty' => 15, 'cat' => 'iphone-13-series', 'featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Le plus petit iPhone 5G. Puce A15 Bionic. Format ultra compact.'],
+            // Accessoires
+            ['name' => 'AirPods Pro 2ème génération', 'slug' => 'airpods-pro-2',           'price' => 185000,  'compare_price' => 210000,  'qty' => 50, 'cat' => 'accessoires-apple','featured' => true,  'new' => false, 'sale' => true,  'desc' => 'Réduction de bruit active. Audio spatial personnalisé. Boîtier MagSafe.'],
+            ['name' => 'Apple Watch Series 10',       'slug' => 'apple-watch-series-10',   'price' => 320000,  'compare_price' => null,    'qty' => 25, 'cat' => 'accessoires-apple','featured' => true,  'new' => true,  'sale' => false, 'desc' => 'La montre connectée la plus fine. Détection apnée du sommeil. Toujours allumée.'],
+            ['name' => 'MagSafe Chargeur 15W',        'slug' => 'magsafe-chargeur',        'price' => 35000,   'compare_price' => 42000,   'qty' => 100,'cat' => 'accessoires-apple','featured' => false, 'new' => false, 'sale' => true,  'desc' => 'Chargeur magnétique certifié Apple. 15W pour iPhone 12 et ultérieur.'],
+            ['name' => 'Coque iPhone 16 Pro Silicone','slug' => 'coque-iphone-16-pro-silicone','price'=> 18000, 'compare_price' => 25000,   'qty' => 200,'cat' => 'accessoires-apple','featured' => false, 'new' => true,  'sale' => true,  'desc' => 'Coque officielle Apple en silicone. Compatible MagSafe. Doublure en microfibre.'],
         ];
 
         foreach ($products as $p) {
-            Product::create(array_merge($p, [
-                'description' => '<p>Description complète du produit ' . $p['name'] . '.</p><p>Ce produit de haute qualité vous offrira une expérience exceptionnelle. Livraison rapide partout au Maroc.</p>',
-                'sku' => 'SKU-' . strtoupper(Str::random(8)),
-                'is_active' => true,
-                'low_stock_threshold' => 5,
-            ]));
+            Product::create([
+                'name'              => $p['name'],
+                'slug'              => $p['slug'],
+                'price'             => $p['price'],
+                'compare_price'     => $p['compare_price'],
+                'quantity'          => $p['qty'],
+                'category_id'       => $catMap[$p['cat']]->id,
+                'brand_id'          => $apple->id,
+                'is_featured'       => $p['featured'],
+                'is_new'            => $p['new'],
+                'on_sale'           => $p['sale'],
+                'is_active'         => true,
+                'low_stock_threshold'=> 3,
+                'sku'               => 'TP-' . strtoupper(Str::random(6)),
+                'short_description' => $p['desc'],
+                'description'       => '<p>' . $p['desc'] . '</p><p>Tous nos iPhones sont <strong>neufs, débloqués tous opérateurs</strong> et accompagnés d\'une garantie vendeur de 3 mois. Livraison sécurisée à Abidjan et dans toute la Côte d\'Ivoire.</p><p><strong>Paiement à la réception</strong> — vous vérifiez votre iPhone avant de payer.</p>',
+                'meta_title'        => $p['name'] . ' — TrustPhone CI',
+                'meta_description'  => $p['desc'] . ' Livraison Abidjan. Paiement à la réception.',
+            ]);
         }
-
-        // Coupons
-        Coupon::create([
-            'code' => 'BIENVENUE10',
-            'description' => '10% de réduction pour les nouveaux clients',
-            'type' => 'percentage',
-            'value' => 10,
-            'is_active' => true,
-            'usage_limit' => 100,
-        ]);
-
-        Coupon::create([
-            'code' => 'SOLDES20',
-            'description' => '20% de réduction - soldes',
-            'type' => 'percentage',
-            'value' => 20,
-            'min_order_amount' => 500,
-            'is_active' => true,
-        ]);
-
-        Coupon::create([
-            'code' => 'LIVRAISON',
-            'description' => 'Livraison gratuite',
-            'type' => 'fixed',
-            'value' => 30,
-            'is_active' => true,
-        ]);
-
-        // Settings boutique
-        $boutiqueSettings = [
-            ['key' => 'shop_name',        'value' => 'Trust Phone CI',            'group' => 'boutique'],
-            ['key' => 'shop_address',     'value' => 'Votre adresse, Abidjan',    'group' => 'boutique'],
-            ['key' => 'shop_city',        'value' => "Abidjan, Côte d'Ivoire",  'group' => 'boutique'],
-            ['key' => 'shop_phone',       'value' => '+225 07 00 00 00 00',       'group' => 'boutique'],
-            ['key' => 'shop_hours',       'value' => 'Lun – Sam : 8h00 – 19h00', 'group' => 'boutique'],
-            ['key' => 'shop_gmaps_url',   'value' => 'https://maps.google.com', 'group' => 'boutique'],
-            ['key' => 'pickup_enabled',   'value' => '1',                         'group' => 'boutique'],
-            ['key' => 'pickup_message',   'value' => 'Venez récupérer votre commande directement en boutique. Gratuit et disponible sous 24h.', 'group' => 'boutique'],
-            ['key' => 'credit_enabled',   'value' => '1',                         'group' => 'credit'],
-            ['key' => 'credit_message',   'value' => "Repartez aujourd'hui avec votre smartphone et payez en plusieurs fois. Venez vous inscrire en boutique avec votre CNI.", 'group' => 'credit'],
-            ['key' => 'credit_conditions','value' => 'CNI requise. Acompte minimum. Durée selon accord.', 'group' => 'credit'],
-        ];
-        foreach ($boutiqueSettings as $s) Setting::create($s);
-
-        $this->command->info('✅ Base de données peuplée avec succès !');
-        $this->command->info('👤 Admin: admin@ecommerce.ci / password');
-        $this->command->info('👤 Client: client@ecommerce.ci / password');
     }
 }

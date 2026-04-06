@@ -30,6 +30,13 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone <span class="text-gray-400">(optionnel)</span></label>
+                    <input type="tel" name="phone" value="{{ old('phone') }}"
+                        placeholder="+225 07 00 00 00 00"
+                        class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
                     <input type="password" name="password" required
                         class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('password') border-red-500 @enderror">

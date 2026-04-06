@@ -79,7 +79,7 @@
   </div>
 
   <div class="footer">
-    <p>© {{ date('Y') }} E-Commerce Laravel — <a href="mailto:support@ecommerce.ma" style="color:#3b82f6">support@ecommerce.ma</a></p>
+    <p>© {{ date('Y') }} TrustPhone CI Laravel — <a href="mailto:support@ecommerce.ma" style="color:#3b82f6">support@ecommerce.ma</a></p>
   </div>
 </div>
 </body>

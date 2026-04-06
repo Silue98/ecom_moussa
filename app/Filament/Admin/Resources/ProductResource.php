@@ -52,6 +52,14 @@ class ProductResource extends Resource
                     Forms\Components\Textarea::make('short_description')
                         ->label('Description courte')
                         ->rows(3),
+                    Forms\Components\KeyValue::make('specifications')
+                        ->label('Caractéristiques techniques')
+                        ->keyLabel('Caractéristique (ex: RAM)')
+                        ->valueLabel('Valeur (ex: 8 Go)')
+                        ->helperText('Ces infos apparaissent dans le comparateur de produits')
+                        ->columnSpanFull()
+                        ->reorderable(),
+
                     Forms\Components\RichEditor::make('description')
                         ->label('Description complète')
                         ->columnSpanFull(),
@@ -63,10 +71,10 @@ class ProductResource extends Resource
                     // Ligne 1 : Prix
                     Forms\Components\Grid::make(3)->schema([
                         Forms\Components\TextInput::make('price')
-                            ->label('Prix de vente (XOF)')
+                            ->label('Prix de vente (FCFA)')
                             ->required()
                             ->numeric()
-                            ->prefix('XOF')
+                            ->prefix('FCFA')
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
                                 $pct = floatval($get('discount_percent'));
@@ -75,14 +83,14 @@ class ProductResource extends Resource
                                 }
                             }),
                         Forms\Components\TextInput::make('compare_price')
-                            ->label('Prix barré (XOF)')
+                            ->label('Prix barré (FCFA)')
                             ->numeric()
-                            ->prefix('XOF')
+                            ->prefix('FCFA')
                             ->helperText('Prix original affiché barré sur la fiche produit'),
                         Forms\Components\TextInput::make('cost_price')
-                            ->label('Prix de revient (XOF)')
+                            ->label('Prix de revient (FCFA)')
                             ->numeric()
-                            ->prefix('XOF'),
+                            ->prefix('FCFA'),
                     ]),
 
                     // Ligne 2 : Remise
@@ -118,7 +126,7 @@ class ProductResource extends Resource
                                         if ($compare > 0 && $compare > $price && $price > 0) {
                                             $pct      = round(($compare - $price) / $compare * 100);
                                             $economie = number_format($compare - $price, 0, ',', ' ');
-                                            return "✅ -{$pct}%  ·  Économie : {$economie} XOF";
+                                            return "✅ -{$pct}%  ·  Économie : {$economie} FCFA";
                                         }
                                         return '—  Aucune remise';
                                     }),
@@ -212,11 +220,11 @@ class ProductResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('price')
                     ->label('Prix')
-                    ->formatStateUsing(fn ($state) => number_format($state, 0, ',', ' ') . ' XOF')
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, ',', ' ') . ' FCFA')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('compare_price')
                     ->label('Prix barré')
-                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', ' ') . ' XOF' : '—')
+                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', ' ') . ' FCFA' : '—')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Stock')

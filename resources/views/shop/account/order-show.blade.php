@@ -4,7 +4,10 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <a href="{{ route('account.orders') }}" class="text-blue-600 hover:underline text-sm mb-6 inline-block">← Retour aux commandes</a>
+    <div class="flex items-center justify-between mb-6">
+    <a href="{{ route('account.orders') }}" class="text-blue-600 hover:underline text-sm">← Retour aux commandes</a>
+    <a href="{{ route('account.order.tracking', $order) }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">📍 Suivre ma commande</a>
+</div>
 
     <h1 class="text-2xl font-bold mb-2">Commande {{ $order->order_number }}</h1>
     <p class="text-gray-500 mb-8">Passée le {{ $order->created_at->format('d/m/Y à H:i') }}</p>
@@ -76,11 +79,7 @@
 
         <div class="mt-6 space-y-2 text-sm border-t pt-4">
             <div class="flex justify-between"><span class="text-gray-500">Sous-total</span><span>{{ number_format($order->subtotal, 2) }} FCFA</span></div>
-            @if($order->discount_amount > 0)
-                <div class="flex justify-between text-green-600"><span>Réduction</span><span>-{{ number_format($order->discount_amount, 2) }} FCFA</span></div>
-            @endif
             <div class="flex justify-between"><span class="text-gray-500">Livraison</span><span>{{ $order->shipping_amount > 0 ? number_format($order->shipping_amount, 2) . ' FCFA' : 'Gratuite' }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">TVA</span><span>{{ number_format($order->tax_amount, 2) }} FCFA</span></div>
             <div class="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                 <span>Total</span>
                 <span class="text-blue-600">{{ number_format($order->total, 2) }} FCFA</span>

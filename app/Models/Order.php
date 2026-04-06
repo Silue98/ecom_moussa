@@ -5,15 +5,15 @@ namespace App\Models;
 use App\Notifications\OrderStatusChanged;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_number', 'status', 'payment_status', 'payment_method',
+        'user_id', 'order_number', 'status', 'payment_status', 'payment_method', 'delivery_type',
         'subtotal', 'tax_amount', 'shipping_amount', 'discount_amount', 'total',
-        'coupon_id', 'coupon_code',
         'shipping_name', 'shipping_email', 'shipping_phone',
         'shipping_address', 'shipping_city', 'shipping_state',
         'shipping_zip', 'shipping_country',
@@ -57,11 +57,6 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function coupon()
-    {
-        return $this->belongsTo(Coupon::class);
-    }
-
     // ─── Accesseurs labels ────────────────────────────────────
     public function getStatusLabelAttribute(): string
     {
@@ -83,6 +78,15 @@ class Order extends Model
             'card'          => '💳 Carte bancaire',
             'bank_transfer' => '🏦 Virement bancaire',
             default         => ucfirst($this->payment_method ?? ''),
+        };
+    }
+
+    public function getDeliveryTypeLabelAttribute(): string
+    {
+        return match ($this->delivery_type) {
+            'pickup'   => '🏪 Retrait en boutique',
+            'delivery' => '🚚 Livraison à domicile',
+            default    => ucfirst($this->delivery_type ?? ''),
         };
     }
 
@@ -116,14 +120,26 @@ class Order extends Model
         parent::boot();
 
         static::creating(function ($order) {
-            $order->order_number = 'ORD-' . strtoupper(uniqid());
+            // Numéro de commande robuste : ORD-YYYYMM-ULID (sans collision)
+            $order->order_number = 'ORD-' . date('Ym') . '-' . strtoupper(substr(Str::ulid(), -8));
         });
 
         // Notification automatique quand le statut change
         static::updated(function ($order) {
-            if ($order->isDirty('status') && $order->user) {
+            if ($order->isDirty('status')) {
                 $oldStatus = $order->getOriginal('status');
-                $order->user->notify(new OrderStatusChanged($order, $oldStatus));
+
+                // Email/notification in-app pour les clients connectés
+                if ($order->user) {
+                    $order->user->notify(new OrderStatusChanged($order, $oldStatus));
+                }
+
+                // WhatsApp pour tous (connectés et invités) si téléphone disponible
+                $phone = $order->shipping_phone ?? $order->billing_phone ?? null;
+                if ($phone && in_array($order->status, ['processing', 'shipped', 'delivered', 'cancelled'])) {
+                    \App\Jobs\SendWhatsAppStatusUpdate::dispatch($order->id, $oldStatus)
+                        ->delay(now()->addSeconds(5));
+                }
             }
         });
     }

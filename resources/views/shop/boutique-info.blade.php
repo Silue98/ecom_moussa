@@ -17,7 +17,7 @@
     <div class="bg-gradient-to-br from-emerald-700 to-emerald-500 text-white rounded-2xl p-8 mb-8 text-center">
         <div class="text-5xl mb-3">🏪</div>
         <h1 class="text-2xl sm:text-3xl font-bold mb-2">Visitez notre boutique</h1>
-        <p class="text-emerald-100 text-base">Essayez nos smartphones en main propre avant d'acheter.</p>
+        <p class="text-emerald-100 text-base">Essayez nos iPhones en main propre avant d'acheter.</p>
     </div>
 
     {{-- Infos pratiques --}}

@@ -15,11 +15,15 @@ class CartService
         if (Auth::check()) {
             $cart = Cart::firstOrCreate(['user_id' => Auth::id()]);
             // Merge session cart if exists
-            $sessionId = Session::getId();
+            $sessionId   = Session::getId();
             $sessionCart = Cart::where('session_id', $sessionId)->where('user_id', null)->first();
             if ($sessionCart) {
                 foreach ($sessionCart->items as $item) {
-                    $this->addToCart($item->product_id, $item->quantity, $item->variant_id, $item->options);
+                    try {
+                        $this->addToCart($item->product_id, $item->quantity, $item->variant_id, $item->options);
+                    } catch (\Exception) {
+                        // Skip items that are out of stock
+                    }
                 }
                 $sessionCart->delete();
             }
@@ -31,19 +35,45 @@ class CartService
 
     public function addToCart(int $productId, int $quantity = 1, ?int $variantId = null, ?array $options = null): void
     {
-        $cart = $this->getCart();
+        $cart    = $this->getCart();
         $product = Product::findOrFail($productId);
-        $price = $product->price;
 
+        // ── Vérification stock : variant ou produit ──────────────────────
         if ($variantId) {
             $variant = $product->variants()->findOrFail($variantId);
-            $price += $variant->price_modifier;
+
+            // Si la variante a son propre stock (quantity > 0), on l'utilise
+            $availableStock = $variant->quantity > 0 ? $variant->quantity : $product->quantity;
+
+            if ($availableStock <= 0) {
+                throw new \Exception("La variante « {$variant->value} » de « {$product->name} » est en rupture de stock.");
+            }
+        } else {
+            $availableStock = $product->quantity;
+
+            if ($availableStock <= 0) {
+                throw new \Exception("Le produit « {$product->name} » est en rupture de stock.");
+            }
         }
 
-        $existingItem = $cart->items()
+        $existingItem     = $cart->items()
             ->where('product_id', $productId)
             ->where('variant_id', $variantId)
             ->first();
+        $currentQtyInCart = $existingItem ? $existingItem->quantity : 0;
+
+        if (($currentQtyInCart + $quantity) > $availableStock) {
+            throw new \Exception(
+                "Stock insuffisant pour « {$product->name} » " .
+                "(disponible : {$availableStock}, déjà dans le panier : {$currentQtyInCart})."
+            );
+        }
+
+        $price = $product->price;
+        if ($variantId) {
+            $variant = $variant ?? $product->variants()->findOrFail($variantId);
+            $price  += $variant->price_modifier;
+        }
 
         if ($existingItem) {
             $existingItem->increment('quantity', $quantity);
@@ -51,9 +81,9 @@ class CartService
             $cart->items()->create([
                 'product_id' => $productId,
                 'variant_id' => $variantId,
-                'quantity' => $quantity,
-                'price' => $price,
-                'options' => $options,
+                'quantity'   => $quantity,
+                'price'      => $price,
+                'options'    => $options,
             ]);
         }
     }
@@ -105,33 +135,23 @@ class CartService
         }
     }
 
-    public function getTotal(?string $couponCode = null): array
+    public function getTotal(): array
     {
-        $subtotal = $this->getSubtotal();
-        $discount = 0;
-
-        if ($couponCode) {
-            $coupon = \App\Models\Coupon::where('code', $couponCode)->first();
-            if ($coupon && $coupon->isValid() && $subtotal >= ($coupon->min_order_amount ?? 0)) {
-                $discount = $coupon->calculateDiscount($subtotal);
-            }
-        }
-
-        // TVA à 0 — prix TTC directement dans les produits
-        $tax      = 0;
+        $subtotal  = $this->getSubtotal();
+        $tax       = 0;
         $threshold = (float) setting('free_shipping_threshold', 30000);
         $shipPrice = (float) setting('shipping_price', 2000);
-        $shipping = $subtotal >= $threshold ? 0 : $shipPrice;
-        $total    = $subtotal - $discount + $shipping;
+        $shipping  = $subtotal >= $threshold ? 0 : $shipPrice;
+        $total     = $subtotal + $shipping;
 
-        return compact('subtotal', 'discount', 'tax', 'shipping', 'total');
+        return compact('subtotal', 'tax', 'shipping', 'total');
     }
 
     public function mergeGuestCart(int $userId): void
     {
-        $sessionId   = session()->getId();
-        $guestCart   = \App\Models\Cart::where('session_id', $sessionId)->first();
-        $userCart    = \App\Models\Cart::firstOrCreate(['user_id' => $userId]);
+        $sessionId = session()->getId();
+        $guestCart = \App\Models\Cart::where('session_id', $sessionId)->first();
+        $userCart  = \App\Models\Cart::firstOrCreate(['user_id' => $userId]);
 
         if ($guestCart && $guestCart->items->isNotEmpty()) {
             foreach ($guestCart->items as $item) {
@@ -143,7 +163,7 @@ class CartService
                 if ($existing) {
                     $existing->increment('quantity', $item->quantity);
                 } else {
-                    $userCart->items()->create($item->only(['product_id', 'variant_id', 'quantity', 'options']));
+                    $userCart->items()->create($item->only(['product_id', 'variant_id', 'quantity', 'price', 'options']));
                 }
             }
             $guestCart->delete();
