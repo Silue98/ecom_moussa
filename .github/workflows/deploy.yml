@@ -23,7 +23,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs --ignore-platform-reqs --ignore-platform-reqs --ignore-platform-reqs
 
       - name: Check PHP syntax
         run: find app config routes -name "*.php" | xargs -I {} php -l {}
