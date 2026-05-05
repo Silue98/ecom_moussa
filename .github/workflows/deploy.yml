@@ -1,0 +1,61 @@
+name: CI/CD Trustphone
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build & Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, redis, bcmath, ctype, curl, openssl, tokenizer, xml
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Check PHP syntax
+        run: find app config routes -name "*.php" | xargs -I {} php -l {}
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Trigger webhook deployment
+        run: |
+          PAYLOAD='{"ref":"refs/heads/main"}'
+          SECRET="${{ secrets.WEBHOOK_SECRET }}"
+          SIG="sha256=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print $2}')"
+
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://trustphone.ci/webhook \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: $SIG" \
+            -d "$PAYLOAD")
+
+          echo "Webhook response: $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "Deployment failed!"
+            exit 1
+          fi
+          echo "Deployment triggered successfully!"
