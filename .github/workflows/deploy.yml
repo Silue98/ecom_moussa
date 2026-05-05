@@ -22,23 +22,26 @@ jobs:
           extensions: mbstring, pdo, pdo_mysql, redis, bcmath, ctype, curl, openssl, tokenizer, xml
           coverage: none
 
-      - name: Install dependencies
+      - name: Prepare directories
         run: |
           mkdir -p bootstrap/cache
-          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/cache/data
           mkdir -p storage/framework/sessions
           mkdir -p storage/framework/views
           mkdir -p storage/logs
-          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqsreqs --ignore-platform-reqs --ignore-platform-reqs
-
-      - name: Check PHP syntax
-        run: find app config routes -name "*.php" | xargs -I {} php -l {}
+          chmod -R 777 storage bootstrap/cache
 
       - name: Copy .env
         run: cp .env.example .env
 
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
       - name: Generate app key
         run: php artisan key:generate
+
+      - name: Check PHP syntax
+        run: find app config routes -name "*.php" | xargs -I {} php -l {}
 
   deploy:
     name: Deploy to Production
