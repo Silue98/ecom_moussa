@@ -17,7 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Shop Routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', function () {
+    return redirect()->route('products.index');
+})->name('home');
 Route::get('/produits', [ProductController::class, 'index'])->name('products.index');
 Route::get('/produits/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 
