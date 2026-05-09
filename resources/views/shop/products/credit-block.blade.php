@@ -1,11 +1,5 @@
 @php
-/**
- * Bloc crédit — lit TOUT depuis les paramètres admin.
- * Aucune règle codée en dur.
- */
 $creditEnabled = setting('credit_enabled', '0') === '1';
-
-// Mots-clés groupes (depuis admin)
 $groupeBRaw = strtolower(setting('credit_groupe_b_keywords', '15 pro max,16,17'));
 $groupeARaw = strtolower(setting('credit_groupe_a_keywords', 'xr,11,12,13,14,15 pro'));
 $groupeAPct = (int)   setting('credit_groupe_a_acompte', 40);
@@ -13,7 +7,6 @@ $groupeBPct = (int)   setting('credit_groupe_b_acompte', 50);
 $nbMois     = (int)   setting('credit_nb_mois', 12);
 $tauxMois   = (float) setting('credit_taux_mensuel', 1.5);
 
-// Détection du groupe (Groupe B en premier — plus spécifique)
 $nomProduit = strtolower(preg_replace('/\s+/', ' ', trim($product->name)));
 $groupe     = null;
 $acomptePct = 0;
@@ -41,7 +34,6 @@ if ($creditEligible) {
     $total      = $acompte + ($mensualite * $nbMois);
     $surcout    = $total - $prix;
 
-    // WhatsApp
     $shopWaPhone = preg_replace('/[^0-9]/', '', setting('shop_phone', ''));
     if (strlen($shopWaPhone) === 10) { $shopWaPhone = '225' . substr($shopWaPhone, 2); }
 
@@ -57,7 +49,6 @@ if ($creditEligible) {
         "Je viendrai en boutique avec ma CNI. Merci !"
     );
 
-    // Documents
     $creditDocs = setting('credit_documents', '');
     $docsList   = $creditDocs ? array_filter(array_map('trim', explode(PHP_EOL, $creditDocs))) : [];
 }
@@ -130,9 +121,9 @@ if ($creditEligible) {
             </div>
         </div>
 
-        {{-- Échéancier --}}
+        {{-- Échéancier simplifié --}}
         <div>
-            <p class="text-xs font-bold text-gray-600 mb-2">📅 Votre échéancier complet</p>
+            <p class="text-xs font-bold text-gray-600 mb-2">📅 Votre échéancier</p>
             <div class="space-y-1.5">
 
                 {{-- Acompte J0 --}}
@@ -145,17 +136,15 @@ if ($creditEligible) {
                     <span class="text-sm font-extrabold text-amber-800">{{ number_format($acompte, 0, ',', ' ') }} FCFA</span>
                 </div>
 
-                {{-- N mensualités --}}
-                @for($m = 1; $m <= $nbMois; $m++)
-                <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-gray-50 border border-gray-100">
-                    <div class="w-7 h-7 rounded-full bg-white border-2 border-blue-300 flex items-center justify-center text-blue-700 text-xs font-bold flex-shrink-0">{{ $m }}</div>
+                {{-- Mensualités résumées en 1 ligne --}}
+                <div class="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-blue-50 border border-blue-200">
+                    <div class="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">×{{ $nbMois }}</div>
                     <div class="flex-1">
-                        <p class="text-xs font-bold text-gray-700">Mensualité {{ $m }}</p>
-                        <p class="text-xs text-gray-400">Dans {{ $m }} mois</p>
+                        <p class="text-xs font-bold text-blue-800">{{ $nbMois }} mensualités — du mois 1 au mois {{ $nbMois }}</p>
+                        <p class="text-xs text-blue-600">Même montant chaque mois</p>
                     </div>
-                    <span class="text-sm font-bold text-gray-700">{{ number_format($mensualite, 0, ',', ' ') }} FCFA</span>
+                    <span class="text-sm font-extrabold text-blue-800">{{ number_format($mensualite, 0, ',', ' ') }} FCFA</span>
                 </div>
-                @endfor
 
                 {{-- Solde final --}}
                 <div class="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-green-50 border border-green-300">
