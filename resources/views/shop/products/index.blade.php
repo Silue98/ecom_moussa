@@ -77,11 +77,12 @@
             </div>
         </aside>
 
-        {{-- ══ Bannière crédit ══ --}}
-        @include('components.credit-banner')
-
         <!-- Products Grid -->
         <div class="flex-1">
+
+            {{-- ══ Bannière crédit ══ --}}
+            @include('components.credit-banner')
+
             <!-- Sort & count bar -->
             <div class="flex items-center justify-between mb-6 bg-white rounded-xl shadow px-4 py-3">
                 <span class="text-gray-600 text-sm">
