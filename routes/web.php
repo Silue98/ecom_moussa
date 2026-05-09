@@ -56,11 +56,6 @@ Route::post('/deconnexion', [LoginController::class, 'logout'])->name('logout');
 Route::get('/inscription', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/inscription', [RegisterController::class, 'register'])->middleware('throttle:5,1');
 
-// ── Fix Filament admin login POST ──────────────────────────────────────────
-Route::post('/admin/login', function () {
-    return redirect()->route('filament.admin.auth.login');
-});
-
 // Mot de passe oublié
 Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/mot-de-passe-oublie', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email')->middleware('throttle:3,1');
