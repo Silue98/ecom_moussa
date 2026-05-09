@@ -5,23 +5,21 @@
 @endphp
 
 @if($creditEnabled)
-<div class="rounded-xl mb-4 px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
-     style="background: linear-gradient(90deg,#92400e,#d97706);">
-    <div class="flex items-center gap-2">
-        <span class="text-lg">💳</span>
+<div style="background:linear-gradient(90deg,#92400e,#d97706);border-radius:12px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">💳</span>
         <div>
-            <p class="font-bold text-white text-sm">Achetez à crédit — Repartez aujourd'hui !</p>
-            <p class="text-amber-100 text-xs">
-                XR → 15 Pro : <strong class="text-white">{{ $groupeAPct }}%</strong>
+            <p style="font-weight:700;color:white;font-size:13px;margin:0;">Achetez à crédit — Repartez aujourd'hui !</p>
+            <p style="color:#fde68a;font-size:11px;margin:0;">
+                XR → 15 Pro : <strong style="color:white;">{{ $groupeAPct }}%</strong>
                 &nbsp;·&nbsp;
-                15 PM → 17 PM : <strong class="text-white">{{ $groupeBPct }}%</strong>
+                15 PM → 17 Pro Max : <strong style="color:white;">{{ $groupeBPct }}%</strong>
                 &nbsp;·&nbsp;
-                <strong class="text-yellow-200">12 mensualités</strong>
+                <strong style="color:#fef08a;">12 mensualités</strong>
             </p>
         </div>
     </div>
-    <a href="{{ route('credit.info') }}"
-       class="bg-white text-amber-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-amber-50 transition whitespace-nowrap">
+    <a href="{{ route('credit.info') }}" style="background:white;color:#92400e;font-weight:700;padding:6px 14px;border-radius:8px;font-size:12px;text-decoration:none;white-space:nowrap;">
         En savoir + →
     </a>
 </div>
