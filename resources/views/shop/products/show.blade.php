@@ -417,11 +417,11 @@
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">
-                                    {{ strtoupper(substr($review->user->name ?? 'A', 0, 1)) }}
+                                    {{ strtoupper(substr($review->display_name, 0, 1)) }}
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <span class="font-medium text-sm">{{ $review->user->name ?? 'Anonyme' }}</span>
+                                        <span class="font-medium text-sm">{{ $review->display_name }}</span>
                                         @if($review->is_verified_purchase)
                                             <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">✅ Achat vérifié</span>
                                         @endif

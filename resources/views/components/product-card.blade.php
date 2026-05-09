@@ -2,17 +2,47 @@
     $waPhone = preg_replace('/[^0-9]/', '', setting('shop_phone', ''));
     if (strlen($waPhone) === 10) { $waPhone = '225' . substr($waPhone, 0); }
 
-    $creditEnabled  = setting('credit_enabled', '0') === '1';
-    $montantMin     = (float) setting('credit_montant_min', 100000);
-    $nbEcheances    = (int)   setting('credit_nb_echeances', 3);
-    $taux           = (float) setting('credit_taux_interet', 0);
-    $pourcentages   = array_map('intval', explode(',', setting('credit_pourcentages', '30,40,30')));
-    $showCredit     = $creditEnabled && $product->price >= $montantMin;
+    // ── Paramètres crédit depuis l'admin ──────────────────────────
+    $creditEnabled = setting('credit_enabled', '0') === '1';
+
+    // Mots-clés groupes (admin) — normalisés en minuscules
+    $groupeBRaw = strtolower(setting('credit_groupe_b_keywords', '15 pro max,16,17'));
+    $groupeARaw = strtolower(setting('credit_groupe_a_keywords', 'xr,11,12,13,14,15 pro'));
+    $groupeAPct = (int) setting('credit_groupe_a_acompte', 40);
+    $groupeBPct = (int) setting('credit_groupe_b_acompte', 50);
+    $nbMois     = (int) setting('credit_nb_mois', 12);
+    $tauxMois   = (float) setting('credit_taux_mensuel', 1.5);
+
+    // Détection du groupe par le nom du produit
+    $nomProduit = strtolower(preg_replace('/\s+/', ' ', trim($product->name)));
+    $groupe     = null;
+    $acomptePct = 0;
+
+    // Tester Groupe B EN PREMIER (mots-clés les plus spécifiques)
+    foreach (array_map('trim', explode(',', $groupeBRaw)) as $kw) {
+        if ($kw !== '' && str_contains($nomProduit, $kw)) {
+            $groupe     = 'B';
+            $acomptePct = $groupeBPct;
+            break;
+        }
+    }
+    // Puis Groupe A
+    if (!$groupe) {
+        foreach (array_map('trim', explode(',', $groupeARaw)) as $kw) {
+            if ($kw !== '' && str_contains($nomProduit, $kw)) {
+                $groupe     = 'A';
+                $acomptePct = $groupeAPct;
+                break;
+            }
+        }
+    }
+
+    $showCredit = $creditEnabled && $groupe !== null;
 
     if ($showCredit) {
-        $totalCredit   = $product->price * (1 + $taux / 100);
-        $premierPct    = $pourcentages[0] ?? 0;
-        $premierVers   = (int) ceil($totalCredit * $premierPct / 100);
+        $acompte    = (int) round($product->price * $acomptePct / 100);
+        $reste      = $product->price - $acompte;
+        $mensualite = (int) round($reste * $tauxMois / $nbMois);
     }
 
     $waMsg = urlencode(
@@ -34,13 +64,27 @@
         @else
             <div class="w-full h-full flex items-center justify-center"><span class="text-6xl">📱</span></div>
         @endif
+
+        {{-- Badges existants --}}
         @if($product->on_sale && $product->discount_percent > 0)
             <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">-{{ $product->discount_percent }}%</span>
         @endif
         @if($product->is_new)
             <span class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-lg">NOUVEAU</span>
         @endif
-        @if($product->quantity > 0 && $product->quantity <= $product->low_stock_threshold)
+
+        {{-- ── BADGE CRÉDIT sur l'image ─────────────────────────── --}}
+        @if($showCredit)
+        <div class="absolute bottom-2 left-2 right-2">
+            <div class="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold"
+                 style="background:rgba(146,64,14,0.92);color:#fef3c7;">
+                <span>💳</span>
+                <span>Crédit dès {{ number_format($acompte, 0, ',', ' ') }} FCFA</span>
+            </div>
+        </div>
+        @endif
+
+        @if($product->quantity > 0 && $product->quantity <= $product->low_stock_threshold && !$showCredit)
             <span class="absolute bottom-2 left-0 right-0 mx-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-lg text-center">⚡ Plus que {{ $product->quantity }} en stock</span>
         @endif
         @if($product->quantity <= 0)
@@ -77,14 +121,19 @@
                 @endif
             </div>
 
-            {{-- Badge crédit --}}
+            {{-- ── Badge mensualité sous le prix ─────────────────── --}}
             @if($showCredit)
-            <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1.5 mt-1.5">
+            <a href="{{ route('products.show', $product) }}"
+               class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 mt-1.5 hover:opacity-90 transition"
+               style="background:#fffbeb;border:1px solid #fcd34d;">
                 <span style="font-size:13px;">💳</span>
-                <span class="text-xs font-bold text-amber-800">
-                    Acheter à crédit en {{ $nbEcheances }} échéances dès {{ number_format($premierVers, 0, ',', ' ') }} FCFA
-                </span>
-            </div>
+                <div>
+                    <span class="text-xs font-extrabold text-amber-800">
+                        {{ $acomptePct }}% auj. · {{ number_format($mensualite, 0, ',', ' ') }} FCFA/mois × {{ $nbMois }}
+                    </span>
+                    <span class="text-xs text-amber-600 ml-1">→ Voir le crédit</span>
+                </div>
+            </a>
             @endif
         </div>
 

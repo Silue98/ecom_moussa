@@ -77,6 +77,9 @@
             </div>
         </aside>
 
+        {{-- ══ Bannière crédit ══ --}}
+        @include('components.credit-banner')
+
         <!-- Products Grid -->
         <div class="flex-1">
             <!-- Sort & count bar -->

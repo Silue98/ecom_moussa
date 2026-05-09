@@ -212,6 +212,8 @@
     </div>
 </nav>
 
+@include('components.ticker-credit')
+
 {{-- ══ Barre info boutique & crédit (sticky sous navbar) ══ --}}
 @php
     $pickupEnabled = setting('pickup_enabled', '0') === '1';
