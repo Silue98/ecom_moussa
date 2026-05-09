@@ -5,25 +5,24 @@
 @endphp
 
 @if($creditEnabled)
-<div class="rounded-xl overflow-hidden mb-4" style="background: linear-gradient(90deg,#92400e,#d97706,#f59e0b);">
-    <div class="flex items-center justify-between px-4 py-3 gap-3 flex-wrap">
-        <div class="flex items-center gap-3">
-            <span class="text-xl">💳</span>
-            <div>
-                <p class="font-extrabold text-white text-sm leading-tight">Achetez à crédit — Repartez aujourd'hui !</p>
-                <p class="text-amber-100 text-xs">
-                    XR → 15 Pro : <strong class="text-white">{{ $groupeAPct }}% acompte</strong>
-                    &nbsp;·&nbsp;
-                    15 PM → 17 PM : <strong class="text-white">{{ $groupeBPct }}% acompte</strong>
-                    &nbsp;·&nbsp;
-                    <strong class="text-yellow-200">12 mensualités</strong>
-                </p>
-            </div>
+<div class="rounded-xl mb-4 px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
+     style="background: linear-gradient(90deg,#92400e,#d97706);">
+    <div class="flex items-center gap-2">
+        <span class="text-lg">💳</span>
+        <div>
+            <p class="font-bold text-white text-sm">Achetez à crédit — Repartez aujourd'hui !</p>
+            <p class="text-amber-100 text-xs">
+                XR → 15 Pro : <strong class="text-white">{{ $groupeAPct }}%</strong>
+                &nbsp;·&nbsp;
+                15 PM → 17 PM : <strong class="text-white">{{ $groupeBPct }}%</strong>
+                &nbsp;·&nbsp;
+                <strong class="text-yellow-200">12 mensualités</strong>
+            </p>
         </div>
-        <a href="{{ route('credit.info') }}"
-           class="bg-white text-amber-800 font-bold px-4 py-2 rounded-lg text-xs hover:bg-amber-50 transition flex-shrink-0">
-            En savoir + →
-        </a>
     </div>
+    <a href="{{ route('credit.info') }}"
+       class="bg-white text-amber-800 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-amber-50 transition whitespace-nowrap">
+        En savoir + →
+    </a>
 </div>
 @endif
