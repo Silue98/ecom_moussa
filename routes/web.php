@@ -49,12 +49,17 @@ Route::get('/commande', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/commande', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/commande/confirmation/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
-// Auth
+// Auth shop
 Route::get('/connexion', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/connexion', [LoginController::class, 'login'])->middleware('throttle:6,1');
 Route::post('/deconnexion', [LoginController::class, 'logout'])->name('logout');
 Route::get('/inscription', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/inscription', [RegisterController::class, 'register'])->middleware('throttle:5,1');
+
+// ── Fix Filament admin login POST ──────────────────────────────────────────
+Route::post('/admin/login', function () {
+    return redirect()->route('filament.admin.auth.login');
+});
 
 // Mot de passe oublié
 Route::get('/mot-de-passe-oublie', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
