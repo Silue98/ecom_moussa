@@ -80,7 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/read-all', [AccountController::class, 'markAllNotificationsRead'])->name('notifications.read-all');
 });
 
-// Reviews
+// Reviews f
 Route::middleware('auth')->group(function () {
     Route::post('/produits/{product:slug}/avis', [App\Http\Controllers\Shop\ReviewController::class, 'store'])->name('reviews.store');
     Route::delete('/avis/{review}', [App\Http\Controllers\Shop\ReviewController::class, 'destroy'])->name('reviews.destroy');
