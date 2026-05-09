@@ -42,7 +42,7 @@
     if ($showCredit) {
         $acompte    = (int) round($product->price * $acomptePct / 100);
         $reste      = $product->price - $acompte;
-        $mensualite = (int) round($reste * $tauxMois / $nbMois);
+        $mensualite = (int) round($reste * (1 + $tauxMois / 100) / $nbMois);
     }
 
     $waMsg = urlencode(
