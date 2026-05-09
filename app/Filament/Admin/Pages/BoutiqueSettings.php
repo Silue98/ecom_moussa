@@ -184,7 +184,7 @@ class BoutiqueSettings extends Page
                                 <strong>iPhone 15 Pro à 390 000 FCFA, acompte 40% :</strong><br>
                                 • Acompte aujourd\'hui = 390 000 × 40% = <strong>156 000 FCFA</strong><br>
                                 • Reste = 390 000 − 156 000 = 234 000 FCFA<br>
-                                • Mensualité = 234 000 × 1,5 ÷ 12 = <strong>29 250 FCFA/mois</strong><br>
+                                • Mensualité = 234 000 × 1,015 ÷ 12 = <strong>19 793 FCFA/mois</strong><br>
                                 • Total remboursé = 156 000 + (29 250 × 12) = <strong>507 000 FCFA</strong>
                             </div>
                         '))
@@ -246,15 +246,15 @@ class BoutiqueSettings extends Page
                             ->helperText('Actuellement : 12 mois')
                             ->required(),
 
-                        Forms\Components\TextInput::make('credit_taux_mensuel')
-                            ->label('Taux appliqué au reste')
-                            ->numeric()
-                            ->minValue(1)
-                            ->step(0.1)
-                            ->default(1.5)
-                            ->suffix('× (multiplicateur)')
-                            ->helperText('1,5 = le reste × 1,5 réparti sur les mois. Ce n\'est pas un % mais un multiplicateur.')
-                            ->required(),
+                       Forms\Components\TextInput::make('credit_taux_mensuel')
+    ->label('Taux d\'intérêt (%)')
+    ->numeric()
+    ->minValue(0)
+    ->step(0.1)
+    ->default(1.5)
+    ->suffix('%')
+    ->helperText('Taux d\'intérêt sur le reste. Ex: 1.5 = 1,5% d\'intérêt appliqué au reste.')
+    ->required(),
                     ]),
 
                     Forms\Components\Placeholder::make('formule_recap')
@@ -264,7 +264,7 @@ class BoutiqueSettings extends Page
                                 <strong>Mensualité = (Prix − Acompte) × Taux ÷ Nb de mois</strong><br>
                                 Avec les valeurs par défaut :<br>
                                 → Mensualité = (Prix − Acompte) × <strong>1,5</strong> ÷ <strong>12</strong><br><br>
-                                <em>Exemple : reste de 234 000 FCFA → 234 000 × 1,5 ÷ 12 = <strong>29 250 FCFA/mois</strong></em>
+                                <em>Exemple : reste de 234 000 FCFA → 234 000 × 1,015 ÷ 12 = <strong>19 793 FCFA/mois</strong></em>
                             </div>
                         '))
                         ->columnSpanFull(),

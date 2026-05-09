@@ -30,7 +30,7 @@ if ($creditEligible) {
     $prix       = (float) $product->price;
     $acompte    = (int) round($prix * $acomptePct / 100);
     $reste      = $prix - $acompte;
-    $mensualite = (int) round($reste * $tauxMois / $nbMois);
+    $mensualite = (int) round($reste * (1 + $tauxMois / 100) / $nbMois);
     $total      = $acompte + ($mensualite * $nbMois);
     $surcout    = $total - $prix;
 
@@ -112,7 +112,7 @@ if ($creditEligible) {
                 <span class="font-semibold">{{ number_format($reste, 0, ',', ' ') }} FCFA</span>
             </div>
             <div class="flex justify-between text-xs text-gray-400">
-                <span>Intérêt crédit (×{{ $tauxMois }} sur {{ $nbMois }} mois)</span>
+                <span>Intérêt crédit ({{ $tauxMois }}% sur {{ $nbMois }} mois)</span>
                 <span>+ {{ number_format($surcout, 0, ',', ' ') }} FCFA</span>
             </div>
             <div class="flex justify-between border-t border-gray-300 pt-1.5">
