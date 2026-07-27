@@ -245,7 +245,7 @@
                         <span class="text-lg">✅</span><span>Repartez avec votre téléphone le jour même</span>
                     </div>
                     <div class="flex items-center gap-3 bg-white/15 rounded-xl px-4 py-3 text-sm">
-                        <span class="text-lg">✅</span><span>Paiement en plusieurs mensualités</span>
+                        <span class="text-lg">✅</span><span>Paiement en plusieurs semaines</span>
                     </div>
                     <div class="flex items-center gap-3 bg-white/15 rounded-xl px-4 py-3 text-sm">
                         <span class="text-lg">✅</span><span>Inscription rapide en boutique (CNI requise)</span>

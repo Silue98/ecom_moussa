@@ -44,7 +44,7 @@ if ($creditEligible) {
         "💰 Prix : " . number_format($prix, 0, ',', ' ') . " FCFA\n\n" .
         "📋 Mon plan de paiement :\n" .
         "  • Acompte aujourd'hui : " . number_format($acompte, 0, ',', ' ') . " FCFA (" . $acomptePct . "%)\n" .
-        "  • Mensualités × " . $nbMois . " : " . number_format($mensualite, 0, ',', ' ') . " FCFA/mois\n" .
+        "  • semaines × " . $nbMois . " : " . number_format($mensualite, 0, ',', ' ') . " FCFA/mois\n" .
         "  • Total : " . number_format($total, 0, ',', ' ') . " FCFA\n\n" .
         "Je viendrai en boutique avec ma CNI. Merci !"
     );
@@ -66,7 +66,7 @@ if ($creditEligible) {
                 </div>
                 <div>
                     <p class="font-extrabold text-white text-base leading-tight">Achetez à crédit — Repartez aujourd'hui !</p>
-                    <p class="text-amber-100 text-xs mt-0.5">Paiement en {{ $nbMois }} mensualités après acompte</p>
+                    <p class="text-amber-100 text-xs mt-0.5">Paiement en {{ $nbMois }} Semaines après acompte</p>
                 </div>
             </div>
             <div class="bg-white/25 rounded-full px-3 py-1 text-xs font-bold text-white flex-shrink-0">
@@ -86,9 +86,9 @@ if ($creditEligible) {
                 <p class="text-xs text-amber-500">FCFA aujourd'hui</p>
             </div>
             <div class="bg-blue-50 border border-blue-200 rounded-xl py-3 px-1">
-                <p class="text-xs text-blue-600 font-semibold mb-1">📅 /mois</p>
+                <p class="text-xs text-blue-600 font-semibold mb-1">📅 /Sem</p>
                 <p class="text-base font-extrabold text-blue-800">{{ number_format($mensualite, 0, ',', ' ') }}</p>
-                <p class="text-xs text-blue-500">FCFA × {{ $nbMois }} mois</p>
+                <p class="text-xs text-blue-500">FCFA × {{ $nbMois }} Sem</p>
             </div>
             <div class="bg-green-50 border border-green-200 rounded-xl py-3 px-1">
                 <p class="text-xs text-green-600 font-semibold mb-1">✅ Total</p>
@@ -140,8 +140,8 @@ if ($creditEligible) {
                 <div class="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-blue-50 border border-blue-200">
                     <div class="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">×{{ $nbMois }}</div>
                     <div class="flex-1">
-                        <p class="text-xs font-bold text-blue-800">{{ $nbMois }} mensualités — du mois 1 au mois {{ $nbMois }}</p>
-                        <p class="text-xs text-blue-600">Même montant chaque mois</p>
+                        <p class="text-xs font-bold text-blue-800">{{ $nbMois }} semaine — de la semaine 1 à la semaine {{ $nbMois }}</p>
+                        <p class="text-xs text-blue-600">Même montant chaque semaine</p>
                     </div>
                     <span class="text-sm font-extrabold text-blue-800">{{ number_format($mensualite, 0, ',', ' ') }} FCFA</span>
                 </div>
@@ -151,7 +151,7 @@ if ($creditEligible) {
                     <div class="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-green-800">iPhone entièrement payé !</p>
-                        <p class="text-xs text-green-600">Après {{ $nbMois }} mensualités</p>
+                        <p class="text-xs text-green-600">Après {{ $nbMois }} semaines</p>
                     </div>
                     <span class="text-sm font-extrabold text-green-700">{{ number_format($total, 0, ',', ' ') }} FCFA</span>
                 </div>

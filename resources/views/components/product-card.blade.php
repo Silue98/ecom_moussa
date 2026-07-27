@@ -129,7 +129,7 @@
                 <span style="font-size:13px;">💳</span>
                 <div>
                     <span class="text-xs font-extrabold text-amber-800">
-                        {{ $acomptePct }}% auj. · {{ number_format($mensualite, 0, ',', ' ') }} FCFA/mois × {{ $nbMois }}
+                        {{ $acomptePct }}% auj. · {{ number_format($mensualite, 0, ',', ' ') }} FCFA/Sem × {{ $nbMois }}
                     </span>
                     <span class="text-xs text-amber-600 ml-1">→ Voir le crédit</span>
                 </div>

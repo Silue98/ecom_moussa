@@ -32,7 +32,7 @@
             <div class="flex items-start gap-3 p-3 bg-green-50 rounded-xl">
                 <span class="text-xl flex-shrink-0">💰</span>
                 <div>
-                    <p class="font-semibold text-green-800 text-sm">Paiement en plusieurs mensualités</p>
+                    <p class="font-semibold text-green-800 text-sm">Paiement en plusieurs semaines</p>
                     <p class="text-xs text-green-600 mt-0.5">Durée et montant définis selon votre capacité de remboursement</p>
                 </div>
             </div>

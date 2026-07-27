@@ -15,7 +15,7 @@
                 &nbsp;·&nbsp;
                 15 PM → 17 Pro Max : <strong style="color:white;">{{ $groupeBPct }}%</strong>
                 &nbsp;·&nbsp;
-                <strong style="color:#fef08a;">12 mensualités</strong>
+                <strong style="color:#fef08a;">12 semaines</strong>
             </p>
         </div>
     </div>
